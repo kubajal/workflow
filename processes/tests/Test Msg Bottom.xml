@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<processExtensions>
+<items>
+<item id="ReceiveTask_0w1uzqr"/><item id="SendTask_0s29kj3"/><item id="SendTask_0v46y4h"><message>ConfirmMessage</message></item><item id="StartEvent_1"/><item id="StartEvent_0mqeycs"><message>StartMessage</message></item><item id="EndEvent_0zwt5g3"/><item id="EndEvent_164wxfp"/><item id="IntermediateCatchEvent_1apvjm0"/><item id="IntermediateCatchEvent_1mkujfb"><timerType>duration</timerType><timer>2 0 0 0</timer></item><item id="IntermediateThrowEvent_14b3x4k"><message>EndMessage</message></item><item id="MessageFlow_152ntjo"/><item id="MessageFlow_0ta0du4"/><item id="MessageFlow_028mpz5"/><item id="SequenceFlow_1phxsr2"/><item id="SequenceFlow_0cbx9xl"/><item id="SequenceFlow_18fju71"/><item id="SequenceFlow_0cm6huz"/><item id="SequenceFlow_17w945f"/><item id="SequenceFlow_0tjpfbp"/><item id="SequenceFlow_1v86yh0"/><item id="SequenceFlow_06tdv6u"/></items>
+<dataElements>
+</dataElements>
+<accessRules>
+</accessRules>
+<subprocesses>
+<subprocess id="Process_1" name="Process_1" implementation="no"/><subprocess id="Process_1jj5wue" name="Process_1jj5wue" implementation="all"/></subprocesses>
+</processExtensions>

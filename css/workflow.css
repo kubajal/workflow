@@ -1,0 +1,63 @@
+@CHARSET "ISO-8859-1";
+.field
+{
+	width: 25%;
+    display: table-cell;
+}
+.fieldValue
+{
+	width: 25%;
+    display: table-cell;
+
+}
+
+ .container {
+    display: table;
+    }
+
+  .row  {
+    display: table-row;
+    width:100%;
+    }
+#accordion-resizer {
+    padding: 10px;
+    width: 350px;
+    height: 220px;
+ }
+
+body {
+overflow:scroll !important;	
+font: 100% "Trebuchet MS", sans-serif;
+		margin: 10px; }
+		
+.ui-tabs-vertical { width: 55em; }
+.ui-tabs-vertical .ui-tabs-nav { padding: .2em .1em .2em .2em; float: left; width: 12em; }
+.ui-tabs-vertical .ui-tabs-nav li { clear: left; width: 100%; border-bottom-width: 1px !important; border-right-width: 0 !important; margin: 0 -1px .2em 0; }
+.ui-tabs-vertical .ui-tabs-nav li a { display:block; }
+.ui-tabs-vertical .ui-tabs-nav li.ui-tabs-active { padding-bottom: 0; padding-right: .1em; border-right-width: 1px; }
+.ui-tabs-vertical .ui-tabs-panel { padding: 1em; float: right; width: 40em;}
+
+ #diagram { background-position: top left; }
+ #diagram, #workArea { width: 100%; height: 50%; padding: 0.5em; }
+ #diagram h3, #workArea h3 { text-align: center; margin: 0; }
+ #workArea { margin-top: 1em; }
+
+.ui-tabs .ui-tabs-nav li {  font-size: .7em; }
+
+.error
+{
+	
+}
+.validationError
+{
+	
+}
+.submit_iframe {
+			position: relative;
+			width: 450px;
+			height: 150px;
+			border: 1px solid #a4bed4;
+			margin-top: 5px;
+			font-family: monospace;
+			font-size: 12px;
+}

@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<!-- 
+	Sample Process Extensions file
+	Created and Managed by Omni Workflow 
+ -->
+<processExtensions>
+<!-- 	List of Actors -->
+<actors>
+<actor name="Customer">description of the actor</actor>
+<actor name="Accounting">description of the actor</actor>
+</actors>
+<!-- 	User Roles -->
+<userRoles>
+<!-- 
+	userRole
+		name	name of user role as defined in WordPress
+		actor	name of actor as defined in this process
+				special roles are:
+				*		all roles
+				viewer	can view only
+		privilegde 	
+		private	indicates that no other user of same role can access this case
+ -->
+<userRole name"Admin" actor"*" />
+<userRole name"user" actor"Customer" Private />
+<userRole name"accounting" actor"Accounting" />
+<userRole name"sales" actor"viewer" />
+</userRoles>
+<!--  List of messages -->
+<messageDefinitions>
+<message name="invoice">
+<variable name="invoiceNumber" type="string"/>
+<variable name="date" type="date"/>
+<variable name="amount" type="money"/>
+<variable name="details" type="string"/>
+</message>
+<message name="payment">
+<variable name="invoiceNumber" type="string"/>
+<variable name="date" type="date"/>
+<variable name="amount" type="money"/>
+</message>
+</messageDefinitions>
+<!--  List of Variables -->
+<variableDefinitions>
+<variable name="invoiceId" type="string" scope="case" />
+<variable name="customerId" type="string" scope="case" />
+<variable name="invoiceDate" type="string" scope="case" />
+</variableDefinitions>
+
+<!-- 	Process Details -->
+<process>
+<title></title>
+<description>
+</description>
+<implemenationNotes>
+</implemenationNotes>
+</process>
+<!-- 	Process Items -->
+
+<items>
+<!--  start event  -->
+<item id="StartEvent_1ywnyyl">
+	<description/>
+	<instruction/>
+	<timerType>DateTime</timerType>
+<actor>Accounting</actor><timer>0 12 1 * * *</timer><timerRepeat/><serviceType>Script</serviceType><script/><customFunction/><formName/><emailTemplate/></item>
+<item type="messageFlow" name="Invoice">
+	<description/>
+	<instruction/>
+	<message name="invoice">
+		<value name="invoiceNumber" variable="invoiceNumber"/>
+		<value name="date" variable="date"/>
+		<value name="amount" variable="amount"/>
+		<value name="details" variable="invoiceDetails"/>
+	</message>
+</item>
+<item id="messageEvent-Receive Message">
+	<description/>
+	<instruction/>
+	<message name="abc">
+		<value name="v2" variable="varaibleName"/>
+	</message>
+</item>
+<item id="ServiceTask_0hxiufq">
+	<actor>Accounting</actor>
+	<timer/><message/><script/><customFunction>InvoicingWorkflow::IssueInvoice</customFunction><formName/><emailTemplate>Invoice</emailTemplate></item>
+<item id="IntermediateCatchEvent_0i2rmds"><actor>Accounting</actor><timer>0  0 14</timer><message/><script></script><customFunction></customFunction><formName></formName><emailTemplate></emailTemplate><timerType>duration</timerType><timerRepeat></timerRepeat><serviceType>Script</serviceType></item>
+<item id="ServiceTask_01jk7ub"><actor>Accounting</actor><timer/><message/><script/><customFunction/><formName/><emailTemplate>InvoiceReminder</emailTemplate><timerType>DateTime</timerType><serviceType>Function</serviceType></item>
+<!-- 	Item start Event -->
+<item id="StartEvent_1me5inp"><actor>Customer</actor><message>Invoice</message>
+<serviceType>Script</serviceType><script/>
+</item>
+
+<item id="ReceiveTask_16xzizy"><actor>Accounting</actor>
+<message name="invoiceNumber">
+	<key name="invoiceId">@invoiceNumber</key>
+</message>
+<serviceType>Script</serviceType><script/><customFunction/><formName/><emailTemplate/></item>
+</items>
+</processExtensions>

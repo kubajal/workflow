@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<processExtensions>
+<items>
+<item id="ReceiveTask_0idz8v4"/><item id="ScriptTask_0cm6ltz"/><item id="ScriptTask_1jikg04"/><item id="ScriptTask_1kgwqx3"/><item id="ScriptTask_08rdr32"/><item id="ScriptTask_0atsabz"/><item id="ScriptTask_1aaut3k"/><item id="StartEvent_1"/><item id="EndEvent_1eyixkn"/><item id="EndEvent_08rnqyl"/><item id="EndEvent_1trgijp"/><item id="IntermediateCatchEvent_1"/><item id="IntermediateThrowEvent_0ro65jz"/><item id="ExclusiveGateway_1p04eid"><direction>Diverging</direction></item><item id="ExclusiveGateway_0wl8f1t"><direction>Diverging</direction></item><item id="SequenceFlow_1fl19zh"/><item id="SequenceFlow_1scet90"/><item id="SequenceFlow_1ulmmnr"/><item id="SequenceFlow_0kqymr6"/><item id="SequenceFlow_1sqf53e"/><item id="SequenceFlow_0odffts"/><item id="SequenceFlow_0507bl3"/><item id="SequenceFlow_1xryb85"/><item id="SequenceFlow_0vz2hir"/><item id="SequenceFlow_1ngwh20"/><item id="SequenceFlow_1gxprp1"/><item id="SequenceFlow_0xmmzvs"/><item id="SequenceFlow_1fmhjsw"/><item id="SequenceFlow_1"/></items>
+<dataElements>
+</dataElements>
+<accessRules>
+<accessRule id="1435900304050" allowRestrict="" userGroup="U" privilege="S" nodeId="" condition="testing of a condition here&#10;"/></accessRules>
+<subprocesses>
+<subprocess id="Process_1" name="Process_1" implementation="null"/></subprocesses>
+</processExtensions>

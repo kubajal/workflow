@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<processExtensions>
+<items>
+<item id="Task_067of50"/><item id="Task_0tvylg0"><variable refId="1436239683826" field="" read="" input=""/></item><item id="Task_0l9aq0l"/><item id="StartEvent_1"/><item id="EndEvent_03bgnf9"/><item id="ExclusiveGateway_0gq9pss"/><item id="SequenceFlow_1u6nt8h"/><item id="SequenceFlow_0hd1aat"/><item id="SequenceFlow_19xmy0z"/><item id="SequenceFlow_0y5ai12"><condition>if ($moreHearings=='Yes')
+ return false;
+else
+ return true;</condition></item><item id="SequenceFlow_0zznw1s"><condition>if ($moreHearings=='Yes')
+ return true;
+else
+ return false;</condition></item><item id="SequenceFlow_0zajzo9"/></items>
+<dataElements>
+<dataElement name="moreHearings" id="1436239683826" title="" description="" dataType="Boolean" validValues="" req=""/></dataElements>
+<accessRules>
+</accessRules>
+<subprocesses>
+<subprocess id="Process_1" name="Process_1" implementation=""/></subprocesses>
+</processExtensions>

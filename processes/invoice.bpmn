@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bonitaConnector="http://www.bonitasoft.org/studio/connector/definition/6.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di_1="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://jcp.org/en/jsr/detail?id=270" xmlns:model="http://www.omg.org/spec/BPMN/20100524/MODEL" xsi:schemaLocation="schemaLocation http://www.omg.org/spec/BPMN/20100524/MODEL schemas/BPMN20.xsd" exporter="BonitaSoft" exporterVersion="6.5.2" expressionLanguage="http://groovy.codehaus.org/" targetNamespace="http://bonitasoft.com/_MdmzQP9DEeSHnZdgWD4apw">
+  <model:collaboration id="_MdmzQP9DEeSHnZdgWD4apw">
+    <model:participant id="_EPV74P9EEeSHnZdgWD4apw" name="Invoice Receipt" processRef="_Md8xgP9DEeSHnZdgWD4apw"/>
+    <model:participant id="_zU9eYP9DEeSHnZdgWD4apw" name="Approver"/>
+    <model:participant id="_1RdnUP9DEeSHnZdgWD4apw" name="Team Assistant"/>
+    <model:participant id="_2X8uQP9DEeSHnZdgWD4apw" name="Accountant"/>
+  </model:collaboration>
+  <model:process id="_Md8xgP9DEeSHnZdgWD4apw" name="Invoice Receipt">
+    <model:ioSpecification id="_EPV74_9EEeSHnZdgWD4apw">
+      <model:inputSet id="_EPV75P9EEeSHnZdgWD4apw"/>
+      <model:outputSet id="_EPV75f9EEeSHnZdgWD4apw"/>
+    </model:ioSpecification>
+    <model:laneSet id="Invoice Receipt_laneSet">
+      <model:lane id="_MeCREP9DEeSHnZdgWD4apw" name="Approver">
+        <model:flowNodeRef>_MeHJkP9DEeSHnZdgWD4apw</model:flowNodeRef>
+        <model:flowNodeRef>_MeLbAP9DEeSHnZdgWD4apw</model:flowNodeRef>
+      </model:lane>
+      <model:lane id="_MeSIsP9DEeSHnZdgWD4apw" name="Team Assistant">
+        <model:flowNodeRef>_MeY2YP9DEeSHnZdgWD4apw</model:flowNodeRef>
+        <model:flowNodeRef>_MecgwP9DEeSHnZdgWD4apw</model:flowNodeRef>
+        <model:flowNodeRef>_MehZQP9DEeSHnZdgWD4apw</model:flowNodeRef>
+        <model:flowNodeRef>_MelqsP9DEeSHnZdgWD4apw</model:flowNodeRef>
+        <model:flowNodeRef>_Mep8IP9DEeSHnZdgWD4apw</model:flowNodeRef>
+      </model:lane>
+      <model:lane id="_Meu0oP9DEeSHnZdgWD4apw" name="Accountant">
+        <model:flowNodeRef>_MeztIP9DEeSHnZdgWD4apw</model:flowNodeRef>
+        <model:flowNodeRef>_Me3-kP9DEeSHnZdgWD4apw</model:flowNodeRef>
+        <model:flowNodeRef>_Me83EP9DEeSHnZdgWD4apw</model:flowNodeRef>
+      </model:lane>
+    </model:laneSet>
+    <model:userTask id="_MeHJkP9DEeSHnZdgWD4apw" name="Approve Invoice">
+      <model:documentation>Approve the invoice (or not).
+</model:documentation>
+    </model:userTask>
+    <model:exclusiveGateway id="_MeLbAP9DEeSHnZdgWD4apw" name="Invoice&#xD;&#xA;approved?" default="_Mrlk4P9DEeSHnZdgWD4apw"/>
+    <model:userTask id="_MeY2YP9DEeSHnZdgWD4apw" name="Review Invoice"/>
+    <model:exclusiveGateway id="_MecgwP9DEeSHnZdgWD4apw" name="Review&#xD;&#xA;successful?" default="_M-9z4P9DEeSHnZdgWD4apw"/>
+    <model:userTask id="_MehZQP9DEeSHnZdgWD4apw" name="Assign Approver">
+      <model:documentation>Select the colleague who should approve this invoice.
+</model:documentation>
+    </model:userTask>
+    <model:startEvent id="_MelqsP9DEeSHnZdgWD4apw" name="Invoice&#xA;received"/>
+    <model:endEvent id="_Mep8IP9DEeSHnZdgWD4apw" name="Invoice not&#xA;processed"/>
+    <model:userTask id="_MeztIP9DEeSHnZdgWD4apw" name="Prepare&#xD;&#xA;Bank&#xD;&#xA;Transfer">
+      <model:documentation>Prepare the bank transfer.
+</model:documentation>
+    </model:userTask>
+    <model:endEvent id="_Me3-kP9DEeSHnZdgWD4apw" name="Invoice&#xA;processed"/>
+    <model:serviceTask id="_Me83EP9DEeSHnZdgWD4apw" name="Archive Invoice"/>
+    <model:sequenceFlow id="_MfBIgP9DEeSHnZdgWD4apw" name="no" sourceRef="_MeLbAP9DEeSHnZdgWD4apw" targetRef="_MeY2YP9DEeSHnZdgWD4apw">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_EPWi_P9EEeSHnZdgWD4apw" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath">${!approved}</model:conditionExpression>
+    </model:sequenceFlow>
+    <model:sequenceFlow id="_MfZjAP9DEeSHnZdgWD4apw" name="" sourceRef="_MeHJkP9DEeSHnZdgWD4apw" targetRef="_MeLbAP9DEeSHnZdgWD4apw">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_EPWi_f9EEeSHnZdgWD4apw" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath"></model:conditionExpression>
+    </model:sequenceFlow>
+    <model:sequenceFlow id="_MkTRIP9DEeSHnZdgWD4apw" name="" sourceRef="_MeY2YP9DEeSHnZdgWD4apw" targetRef="_MecgwP9DEeSHnZdgWD4apw"/>
+    <model:sequenceFlow id="_Mrlk4P9DEeSHnZdgWD4apw" name="yes" sourceRef="_MeLbAP9DEeSHnZdgWD4apw" targetRef="_MeztIP9DEeSHnZdgWD4apw">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_EPWi_v9EEeSHnZdgWD4apw" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath">${approved}</model:conditionExpression>
+    </model:sequenceFlow>
+    <model:sequenceFlow id="_M1RsYP9DEeSHnZdgWD4apw" name="no" sourceRef="_MecgwP9DEeSHnZdgWD4apw" targetRef="_Mep8IP9DEeSHnZdgWD4apw">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_EPWi__9EEeSHnZdgWD4apw" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath">${!clarified}</model:conditionExpression>
+    </model:sequenceFlow>
+    <model:sequenceFlow id="_M-9z4P9DEeSHnZdgWD4apw" name="yes" sourceRef="_MecgwP9DEeSHnZdgWD4apw" targetRef="_MeHJkP9DEeSHnZdgWD4apw">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_EPXKAP9EEeSHnZdgWD4apw" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath">${clarified}</model:conditionExpression>
+    </model:sequenceFlow>
+    <model:sequenceFlow id="_NIp7YP9DEeSHnZdgWD4apw" name="" sourceRef="_MehZQP9DEeSHnZdgWD4apw" targetRef="_MeHJkP9DEeSHnZdgWD4apw">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_EPXKAf9EEeSHnZdgWD4apw" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath"></model:conditionExpression>
+    </model:sequenceFlow>
+    <model:sequenceFlow id="_NSudYP9DEeSHnZdgWD4apw" name="" sourceRef="_MeztIP9DEeSHnZdgWD4apw" targetRef="_Me83EP9DEeSHnZdgWD4apw"/>
+    <model:sequenceFlow id="_NcbzAP9DEeSHnZdgWD4apw" name="" sourceRef="_MelqsP9DEeSHnZdgWD4apw" targetRef="_MehZQP9DEeSHnZdgWD4apw"/>
+    <model:sequenceFlow id="_NoggIP9DEeSHnZdgWD4apw" name="" sourceRef="_Me83EP9DEeSHnZdgWD4apw" targetRef="_Me3-kP9DEeSHnZdgWD4apw"/>
+  </model:process>
+  <di:BPMNDiagram name="invoice">
+    <di:BPMNPlane id="plane__MdmzQP9DEeSHnZdgWD4apw" bpmnElement="_MdmzQP9DEeSHnZdgWD4apw">
+      <di:BPMNShape id="_Md9_oP9DEeSHnZdgWD4apw" bpmnElement="_Md8xgP9DEeSHnZdgWD4apw" isHorizontal="true">
+        <dc:Bounds height="488.0" width="1065.0" x="30.0" y="30.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MeCREf9DEeSHnZdgWD4apw" bpmnElement="_MeCREP9DEeSHnZdgWD4apw" isHorizontal="true">
+        <dc:Bounds height="161.0" width="1052.0" x="52.0" y="30.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MeHwof9DEeSHnZdgWD4apw" bpmnElement="_MeHJkP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="50.0" width="100.0" x="323.0" y="86.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MeMCEP9DEeSHnZdgWD4apw" bpmnElement="_MeLbAP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="43.0" width="43.0" x="508.0" y="87.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MeSvwP9DEeSHnZdgWD4apw" bpmnElement="_MeSIsP9DEeSHnZdgWD4apw" isHorizontal="true">
+        <dc:Bounds height="183.0" width="1043.0" x="52.0" y="191.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MeZdcP9DEeSHnZdgWD4apw" bpmnElement="_MeY2YP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="50.0" width="100.0" x="568.0" y="258.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MedH0P9DEeSHnZdgWD4apw" bpmnElement="_MecgwP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="43.0" width="43.0" x="742.0" y="272.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MeiAUP9DEeSHnZdgWD4apw" bpmnElement="_MehZQP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="50.0" width="100.0" x="200.0" y="258.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_Melqtf9DEeSHnZdgWD4apw" bpmnElement="_MelqsP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="30.0" width="30.0" x="116.0" y="284.0"/>
+        <di:BPMNLabel id="_EPWi9v9EEeSHnZdgWD4apw" labelStyle="_EPV74f9EEeSHnZdgWD4apw">
+          <dc:Bounds height="15.0" width="45.0" x="75.0" y="317.0"/>
+        </di:BPMNLabel>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MeqjMv9DEeSHnZdgWD4apw" bpmnElement="_Mep8IP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="30.0" width="30.0" x="932.0" y="284.0"/>
+        <di:BPMNLabel id="_EPWi9_9EEeSHnZdgWD4apw" labelStyle="_EPV74f9EEeSHnZdgWD4apw">
+          <dc:Bounds height="15.0" width="60.0" x="866.0" y="317.0"/>
+        </di:BPMNLabel>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MevbsP9DEeSHnZdgWD4apw" bpmnElement="_Meu0oP9DEeSHnZdgWD4apw" isHorizontal="true">
+        <dc:Bounds height="144.0" width="1043.0" x="52.0" y="374.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_Me0UO_9DEeSHnZdgWD4apw" bpmnElement="_MeztIP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="50.0" width="100.0" x="494.0" y="421.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_Me4lpP9DEeSHnZdgWD4apw" bpmnElement="_Me3-kP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="30.0" width="30.0" x="949.0" y="456.0"/>
+        <di:BPMNLabel id="_EPWi-v9EEeSHnZdgWD4apw" labelStyle="_EPV74f9EEeSHnZdgWD4apw">
+          <dc:Bounds height="15.0" width="54.0" x="897.0" y="489.0"/>
+        </di:BPMNLabel>
+      </di:BPMNShape>
+      <di:BPMNShape id="_Me9eIP9DEeSHnZdgWD4apw" bpmnElement="_Me83EP9DEeSHnZdgWD4apw">
+        <dc:Bounds height="50.0" width="100.0" x="800.0" y="430.0"/>
+      </di:BPMNShape>
+      <di:BPMNEdge id="_MfBIg_9DEeSHnZdgWD4apw" bpmnElement="_MfBIgP9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="540.0" y="119.0"/>
+        <di_1:waypoint x="608.0" y="119.0"/>
+        <di_1:waypoint x="608.0" y="258.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="15.0" width="15.0" x="566.0" y="95.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_MfaKEP9DEeSHnZdgWD4apw" bpmnElement="_MfZjAP9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="423.0" y="109.0"/>
+        <di_1:waypoint x="508.0" y="109.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="467.0" y="109.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_MkT4MP9DEeSHnZdgWD4apw" bpmnElement="_MkTRIP9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="668.0" y="288.0"/>
+        <di_1:waypoint x="747.0" y="288.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="709.0" y="288.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_MrmL8P9DEeSHnZdgWD4apw" bpmnElement="_Mrlk4P9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="529.0" y="130.0"/>
+        <di_1:waypoint x="529.0" y="421.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="15.0" width="18.0" x="513.0" y="73.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_M1STcP9DEeSHnZdgWD4apw" bpmnElement="_M1RsYP9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="782.0" y="296.0"/>
+        <di_1:waypoint x="932.0" y="296.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="15.0" width="15.0" x="836.0" y="275.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_M--a8v9DEeSHnZdgWD4apw" bpmnElement="_M-9z4P9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="760.0" y="274.0"/>
+        <di_1:waypoint x="760.0" y="53.0"/>
+        <di_1:waypoint x="399.0" y="53.0"/>
+        <di_1:waypoint x="399.0" y="86.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="15.0" width="18.0" x="565.0" y="38.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_NIqicv9DEeSHnZdgWD4apw" bpmnElement="_NIp7YP9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="256.0" y="258.0"/>
+        <di_1:waypoint x="256.0" y="114.0"/>
+        <di_1:waypoint x="308.0" y="114.0"/>
+        <di_1:waypoint x="308.0" y="111.0"/>
+        <di_1:waypoint x="323.0" y="111.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="256.0" y="150.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_NSvEcP9DEeSHnZdgWD4apw" bpmnElement="_NSudYP9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="594.0" y="450.0"/>
+        <di_1:waypoint x="800.0" y="450.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="683.0" y="450.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_NcbzA_9DEeSHnZdgWD4apw" bpmnElement="_NcbzAP9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="144.0" y="291.0"/>
+        <di_1:waypoint x="200.0" y="291.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="172.0" y="281.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_NohHMP9DEeSHnZdgWD4apw" bpmnElement="_NoggIP9DEeSHnZdgWD4apw">
+        <di_1:waypoint x="900.0" y="463.0"/>
+        <di_1:waypoint x="950.0" y="463.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="934.0" y="463.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+    </di:BPMNPlane>
+    <di:BPMNLabelStyle id="_EPV74f9EEeSHnZdgWD4apw">
+      <dc:Font isBold="false" isItalic="false" isStrikeThrough="false" isUnderline="false" name="Segoe UI" size="9.0"/>
+    </di:BPMNLabelStyle>
+  </di:BPMNDiagram>
+</model:definitions>

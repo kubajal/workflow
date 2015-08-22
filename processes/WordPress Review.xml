@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<processExtensions>
+<items>
+<item id="UserTask_0j2fh5k"/><item id="UserTask_1ind1gw"/><item id="ServiceTask_18j1nn8"/><item id="ServiceTask_0nxbehe"/><item id="StartEvent_1"/><item id="StartEvent_02m85zf"/><item id="EndEvent_09u2ge6"/><item id="EndEvent_0r5njza"/><item id="IntermediateCatchEvent_1lnr0od"/><item id="IntermediateCatchEvent_0nim25x"/><item id="IntermediateCatchEvent_1hsmvnv"/><item id="IntermediateThrowEvent_0ldlh77"/><item id="IntermediateThrowEvent_0from9j"/><item id="IntermediateThrowEvent_19324qh"/><item id="IntermediateThrowEvent_1poknlf"/><item id="ExclusiveGateway_0r7locn"/><item id="ExclusiveGateway_0bmb8xa"/><item id="EventBasedGateway_00uf75q"/><item id="MessageFlow_11qhn4y"/><item id="MessageFlow_0th7ql2"/><item id="MessageFlow_0muov66"/><item id="MessageFlow_182noyb"/><item id="SequenceFlow_147qfs1"/><item id="SequenceFlow_1v2ap4l"/><item id="SequenceFlow_0ntmj75"/><item id="SequenceFlow_0s3ahz3"/><item id="SequenceFlow_11ymqlr"/><item id="SequenceFlow_1nvh8d6"/><item id="SequenceFlow_0j1pzuj"/><item id="SequenceFlow_0lheb0l"/><item id="SequenceFlow_1bbphea"/><item id="SequenceFlow_0uga4m5"/><item id="SequenceFlow_0ka6lrj"/><item id="SequenceFlow_0fabvh9"/><item id="SequenceFlow_1jpndso"/><item id="SequenceFlow_0a8rhb3"/><item id="SequenceFlow_1hxffp6"/><item id="SequenceFlow_1fgl31m"/><item id="SequenceFlow_1b5feyy"/></items>
+<dataElements>
+</dataElements>
+<accessRules>
+</accessRules>
+<subprocesses>
+<subprocess id="Process_1" name="Process_1" implementation=""/><subprocess id="Process_114ya2i" name="Process_114ya2i" implementation=""/></subprocesses>
+</processExtensions>

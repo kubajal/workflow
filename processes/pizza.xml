@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<processExtensions>
+<items>
+<item id="IntermediateCatchEvent_1m0te3o"><actor></actor><timerType>duration</timerType><timer>0 1 0 0</timer><timerRepeat></timerRepeat><condition></condition><isDefault>Yes</isDefault><action.actionType>None</action.actionType><action.actionScript></action.actionScript><action.actionParameters></action.actionParameters></item></items>
+</processExtensions>

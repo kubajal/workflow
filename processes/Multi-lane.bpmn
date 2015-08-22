@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bonitaConnector="http://www.bonitasoft.org/studio/connector/definition/6.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di_1="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://jcp.org/en/jsr/detail?id=270" xmlns:model="http://www.omg.org/spec/BPMN/20100524/MODEL" xsi:schemaLocation="schemaLocation http://www.omg.org/spec/BPMN/20100524/MODEL schemas/BPMN20.xsd" exporter="BonitaSoft" exporterVersion="6.5.2" expressionLanguage="http://groovy.codehaus.org/" targetNamespace="http://bonitasoft.com/_MD_BwDFpEeWJrM9aMyiALw">
+  <model:collaboration id="_MD_BwDFpEeWJrM9aMyiALw">
+    <model:participant id="_OVTkIDFpEeWJrM9aMyiALw" name="Pool5" processRef="_MD_BwTFpEeWJrM9aMyiALw"/>
+    <model:participant id="_MD_B9TFpEeWJrM9aMyiALw" name="Employee actor">
+      <model:documentation>This is an example of actor that is mapped to any ACME users</model:documentation>
+    </model:participant>
+  </model:collaboration>
+  <model:process id="_MD_BwTFpEeWJrM9aMyiALw" name="Pool5">
+    <model:ioSpecification id="_OVfxYDFpEeWJrM9aMyiALw">
+      <model:inputSet id="_OVfxYTFpEeWJrM9aMyiALw"/>
+      <model:outputSet id="_OVfxYjFpEeWJrM9aMyiALw"/>
+    </model:ioSpecification>
+    <model:laneSet id="Pool5_laneSet">
+      <model:lane id="_MD_BwjFpEeWJrM9aMyiALw" name="Employee lane">
+        <model:flowNodeRef>_MD_ByDFpEeWJrM9aMyiALw</model:flowNodeRef>
+        <model:flowNodeRef>_MD_BwzFpEeWJrM9aMyiALw</model:flowNodeRef>
+        <model:flowNodeRef>_MD_B1DFpEeWJrM9aMyiALw</model:flowNodeRef>
+      </model:lane>
+      <model:lane id="_MD_B2TFpEeWJrM9aMyiALw" name="Lane1">
+        <model:flowNodeRef>_MD_B2jFpEeWJrM9aMyiALw</model:flowNodeRef>
+      </model:lane>
+      <model:lane id="_MD_B3zFpEeWJrM9aMyiALw" name="Lane2"/>
+    </model:laneSet>
+    <model:userTask id="_MD_ByDFpEeWJrM9aMyiALw" name="Step1"/>
+    <model:startEvent id="_MD_BwzFpEeWJrM9aMyiALw" name="Start1"/>
+    <model:intermediateCatchEvent id="_MD_B1DFpEeWJrM9aMyiALw" name="Message1"/>
+    <model:intermediateCatchEvent id="_MD_B2jFpEeWJrM9aMyiALw" name="Message2"/>
+    <model:sequenceFlow id="_MD_B7DFpEeWJrM9aMyiALw" name="" sourceRef="_MD_BwzFpEeWJrM9aMyiALw" targetRef="_MD_ByDFpEeWJrM9aMyiALw"/>
+    <model:sequenceFlow id="_MD_B7zFpEeWJrM9aMyiALw" name="" sourceRef="_MD_ByDFpEeWJrM9aMyiALw" targetRef="_MD_B1DFpEeWJrM9aMyiALw"/>
+    <model:sequenceFlow id="_MD_B8jFpEeWJrM9aMyiALw" name="" sourceRef="_MD_ByDFpEeWJrM9aMyiALw" targetRef="_MD_B2jFpEeWJrM9aMyiALw"/>
+  </model:process>
+  <di:BPMNDiagram name="Multi-lane">
+    <di:BPMNPlane id="plane__MD_BwDFpEeWJrM9aMyiALw" bpmnElement="_MD_BwDFpEeWJrM9aMyiALw">
+      <di:BPMNShape id="_MD_CDzFpEeWJrM9aMyiALw" bpmnElement="_MD_BwTFpEeWJrM9aMyiALw" isHorizontal="true">
+        <dc:Bounds height="639.0" width="1040.0" x="30.0" y="30.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MD_CEjFpEeWJrM9aMyiALw" bpmnElement="_MD_BwjFpEeWJrM9aMyiALw" isHorizontal="true">
+        <dc:Bounds height="218.0" width="1018.0" x="52.0" y="30.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MD_CFTFpEeWJrM9aMyiALw" bpmnElement="_MD_ByDFpEeWJrM9aMyiALw">
+        <dc:Bounds height="50.0" width="100.0" x="212.0" y="90.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MD_CGDFpEeWJrM9aMyiALw" bpmnElement="_MD_BwzFpEeWJrM9aMyiALw">
+        <dc:Bounds height="30.0" width="30.0" x="112.0" y="98.0"/>
+        <di:BPMNLabel id="_OV-SgTFpEeWJrM9aMyiALw" labelStyle="_OVZqwDFpEeWJrM9aMyiALw">
+          <dc:Bounds height="15.0" width="31.0" x="112.0" y="133.0"/>
+        </di:BPMNLabel>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MD_CHDFpEeWJrM9aMyiALw" bpmnElement="_MD_B1DFpEeWJrM9aMyiALw">
+        <dc:Bounds height="30.0" width="30.0" x="437.0" y="124.0"/>
+        <di:BPMNLabel id="_OV-SgjFpEeWJrM9aMyiALw" labelStyle="_OVZqwDFpEeWJrM9aMyiALw">
+          <dc:Bounds height="15.0" width="53.0" x="426.0" y="159.0"/>
+        </di:BPMNLabel>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MD_CJTFpEeWJrM9aMyiALw" bpmnElement="_MD_B2TFpEeWJrM9aMyiALw" isHorizontal="true">
+        <dc:Bounds height="171.0" width="1018.0" x="52.0" y="248.0"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MD_CKDFpEeWJrM9aMyiALw" bpmnElement="_MD_B2jFpEeWJrM9aMyiALw">
+        <dc:Bounds height="30.0" width="30.0" x="247.0" y="304.0"/>
+        <di:BPMNLabel id="_OV-ShDFpEeWJrM9aMyiALw" labelStyle="_OVZqwDFpEeWJrM9aMyiALw">
+          <dc:Bounds height="15.0" width="53.0" x="236.0" y="339.0"/>
+        </di:BPMNLabel>
+      </di:BPMNShape>
+      <di:BPMNShape id="_MD_CMTFpEeWJrM9aMyiALw" bpmnElement="_MD_B3zFpEeWJrM9aMyiALw" isHorizontal="true">
+        <dc:Bounds height="250.0" width="1018.0" x="52.0" y="419.0"/>
+      </di:BPMNShape>
+      <di:BPMNEdge id="_MD_CPzFpEeWJrM9aMyiALw" bpmnElement="_MD_B7DFpEeWJrM9aMyiALw">
+        <di_1:waypoint x="141.0" y="114.0"/>
+        <di_1:waypoint x="212.0" y="114.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="177.0" y="104.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_MD_CRDFpEeWJrM9aMyiALw" bpmnElement="_MD_B7zFpEeWJrM9aMyiALw">
+        <di_1:waypoint x="312.0" y="127.0"/>
+        <di_1:waypoint x="442.0" y="127.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="377.0" y="117.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_MD_CSTFpEeWJrM9aMyiALw" bpmnElement="_MD_B8jFpEeWJrM9aMyiALw">
+        <di_1:waypoint x="262.0" y="140.0"/>
+        <di_1:waypoint x="262.0" y="304.0"/>
+        <di:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="272.0" y="222.0"/>
+        </di:BPMNLabel>
+      </di:BPMNEdge>
+    </di:BPMNPlane>
+    <di:BPMNLabelStyle id="_OVZqwDFpEeWJrM9aMyiALw">
+      <dc:Font isBold="false" isItalic="false" isStrikeThrough="false" isUnderline="false" name="Segoe UI" size="9.0"/>
+    </di:BPMNLabelStyle>
+  </di:BPMNDiagram>
+</model:definitions>

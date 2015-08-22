@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<processExtensions>
+<items>
+<item id="Task_0a1x02b"><variable refId="de3" field="3" read="null" input="true"/><variable refId="de1" field="1" read="null" input="true"/><variable refId="de2" field="2" read="true" input="null"/><variable refId="de4" field="4" read="true" input="null"/><variable refId="de5" field="" read="" input="true"/><variable refId="de6" field="" read="true" input=""/></item><item id="UserTask_0h2n8wu"><actionType>Form</actionType><actionScript>df:1</actionScript><variable refId="de4" field="4" read="null" input="true"/><variable refId="de1" field="1" read="null" input="true"/><variable refId="de2" field="2" read="null" input="true"/><variable refId="de3" field="3" read="null" input="true"/><variable refId="de5" field="" read="null" input="null"/><variable refId="de6" field="" read="null" input="null"/></item><item id="UserTask_1z04rjf"><variable refId="de4" field="" read="null" input="null"/></item><item id="UserTask_1akswid"><variable refId="de1" field="" read="null" input="null"/></item><item id="UserTask_1b732dx"><variable refId="de1" field="" read="null" input="null"/></item><item id="UserTask_1mqe5zj"><variable refId="de1" field="" read="null" input="null"/></item><item id="UserTask_1onatrv"><variable refId="de3" field="" read="null" input="null"/></item><item id="StartEvent_1"/><item id="EndEvent_0dd0zas"/><item id="ExclusiveGateway_06pmaep"><direction>Diverging</direction></item><item id="ExclusiveGateway_0ejauzs"><direction>Diverging</direction></item><item id="SequenceFlow_045sos7"/><item id="SequenceFlow_0j3kf2n"/><item id="SequenceFlow_1re6xr5"><condition>
+			if($escalation=='No') 
+			return true; 
+			else 
+				return false;
+			</condition></item><item id="SequenceFlow_1lt329a"/><item id="SequenceFlow_1d65ydj"/><item id="SequenceFlow_1bcn81r"/><item id="SequenceFlow_06n8vuv"><condition>return ($customerResponse=="Yes");</condition></item><item id="SequenceFlow_1urpjhx"/><item id="SequenceFlow_0i071yi"><condition>return ($escalation=='Yes');
+			</condition></item><item id="SequenceFlow_0g2ulj0"/><item id="SequenceFlow_1xnrffm"/><item id="SequenceFlow_1rhadj8"><condition>return ($customerResponse=="No");</condition></item></items>
+<dataElements>
+<dataElement name="problem" id="de1" title="Problem Description" description="" dataType="null" validValues="null" req="null"/><dataElement name="customer" id="de2" title="Problem Description" description="" dataType="null" validValues="null" req="null"/><dataElement name="resolution" id="de3" title="Problem Description" description="" dataType="null" validValues="null" req="null"/><dataElement name="escalation" id="de4" title="Problem Description" description="" dataType="null" validValues="Yes,No" req="null"/><dataElement name="customerFeedback" id="de5" title="Problem Description" description="" dataType="null" validValues="null" req="null"/><dataElement name="customerResponse" id="de6" title="Problem Description" description="" dataType="null" validValues="Yes,No" req="null"/></dataElements>
+<accessRules>
+</accessRules>
+<subprocesses>
+<subprocess id="Process_1" name="Process_1" implementation=""/></subprocesses>
+</processExtensions>
