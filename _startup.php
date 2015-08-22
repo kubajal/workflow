@@ -7,13 +7,13 @@ define( 'OMNIWORKFLOW_PATH', __DIR__ );
 include_once __DIR__."/lib/Log4PHP/Logger.php";
 include_once __DIR__."/config.php";
 include_once __DIR__."/classes/Helper.php";
+include_once __DIR__."/views/Views.php";
 
 spl_autoload_register('omniFlow_AutoLoader');
 
 //include_once __DIR__."/classes/Classes.php";
 include_once __DIR__."/svc/API.php";
-include_once __DIR__."/classes/Engine/ProcessEngine.php";
-include_once __DIR__."/classes/DB.php";
+include_once __DIR__."/classes/engine/ProcessEngine.php";
 include_once __DIR__."/classes/Data.php";
 include_once __DIR__."/classes/meta.php";
 include_once __DIR__."/classes/Describer.php";
@@ -29,6 +29,7 @@ function endsWith($haystack, $needle) {
 
 function omniFlow_AutoLoader($className)
 {
+//        Context::Debug('<br />loading '.$className);
 	$className=str_replace('\\', '/', $className);
         if (strrpos($className, '/')!==false)
         {
@@ -43,6 +44,11 @@ function omniFlow_AutoLoader($className)
            elseif ($folder=='OmniFlow/WFCase')
            {
                 include __DIR__.'/classes/WFCase/' . $class . '.php';
+                return;
+           }
+           elseif ($folder=='OmniFlow/WFUser')
+           {
+                include __DIR__.'/classes/WFUser/' . $class . '.php';
                 return;
            }
            elseif ($folder=='OmniFlow/enum')

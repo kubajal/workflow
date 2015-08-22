@@ -18,7 +18,7 @@ class AdminController extends Controller{
 
 public function Action_listEvents($req)
 {
-		$rows=  OmniModel::listEvents();
+		$rows=OmniModel::getInstance()->listEvents();
 		$v=new Views();
                 $v->header();
 		$v->listEvents($rows);		
@@ -27,13 +27,22 @@ public function Action_listEvents($req)
 public function Action_listMessages($req)
 {	
     
-		$rows=DB::listMessages();
+		$rows=OmniModel::getInstance()->listMessages();
 	
 		$v=new Views();
                 $v->header();
 		$v->listMessages($rows);
                 $v->endPage();
 	
+}
+public function Action_installDB($req)
+{	
+		$v=new Views();
+                $v->header();
+                $om=new OmniModel();
+                $om->installDB();
+                $v->endPage();
+                
 }
 public function Action_resetCaseData($req)
 {	

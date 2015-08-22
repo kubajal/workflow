@@ -62,7 +62,6 @@ function ShowCase($case,$imageFile,$showItems=true)
 		  </td>
 		  <td>
 				<div id="itemDetails">
-				<p>Please select an item from the list on the left or diagram above to view details.
 				</div>
 		  </td>
 		  </tr></table>
@@ -87,7 +86,7 @@ function getItemAction(WFCase\WFCaseItem $item)
                         $actionName="Launch $item->label";
 
                 if ($task->isEvent())
-                        $actionName="Signal the Event";
+                        $actionName="Signal Event $item->label";
                 }
 
                 $link=Helper::getUrl(array('action'=>'task.execute','file'=>$fileName,'caseId'=>$case->caseId,'id'=>$item->id)); 
@@ -114,7 +113,9 @@ public function getCaseData($case,$showItems)
             $arr=$item->__toArray();
             // add actions here
             // Stephen King^http://www.stephenking.com/the_author.html
-            $arr['action']=$this->getItemAction($item);
+            $action=$this->getItemAction($item);
+            $arr['action']=$action;
+            
             $arr['rowNo']=$i;
             $items[]=$arr;
             $i++;

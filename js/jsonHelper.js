@@ -1,6 +1,6 @@
-jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
-  alert("Error requesting page " + settings.url + thrownError  +request +response);
-});
+/* jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
+  alert("Error requesting page (jsonHelper) " + settings.url + thrownError  +request +response);
+}); */
 var jsonData;
 var statusBar;
 function displayStatus(msg)

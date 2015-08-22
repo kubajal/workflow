@@ -30,7 +30,7 @@ use OmniFlow\ActionManager;
  *
  * @author ralph
  */
-class WFCase extends OmniFlow\WFObject
+class WFCase extends \OmniFlow\WFObject
 	{
 		var $caseId;
 		var $title;
@@ -42,6 +42,8 @@ class WFCase extends OmniFlow\WFObject
 		var $proc;
 		var $items = Array();
 		var $values=Array();
+                var $assignments=Array();
+                var $participants=Array();
                 
 		var $isProcess=0;
 		public function describe()
@@ -122,7 +124,7 @@ class WFCase extends OmniFlow\WFObject
 			$item->message = $processItem->message;
 			$item->signalName = $processItem->signalName;
 			$case->items[]=$item;
-			$db=new caseItemModel();
+			$db=new OmniFlow\CaseItemModel();
 			$db->insert($item);
 				
 			return $item;

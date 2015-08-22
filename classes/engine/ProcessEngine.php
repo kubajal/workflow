@@ -298,7 +298,7 @@ class ActionManager
 		}
                 else
                 {
-		Context::Log(ERROR,'No Action type specified:'.$task->actionType);
+		//Context::Log(ERROR,'No Action type specified:'.$task->actionType);
                 }
 	} 
 }

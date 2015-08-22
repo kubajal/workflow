@@ -10,18 +10,23 @@ namespace OmniFlow;
  */
 class caseItemStatusModel extends OmniModel
 {
-    public static function getTable()
+        public static function getInstance()
+        {
+            return new caseItemStatusModel();
+        }    
+    public  function getTable()
     {
-    return self::getPrefix()."caseItemStatus";
+        return $this->db->getPrefix()."wf_caseItemStatus";
     }
 
-    public static function insert(WFCase\WFCaseItem $item)
+    public function insert(WFCase\WFCaseItem $item)
 	{
 		
 		$item->started=date("Y-m-d H:i:s");
 		
 		$data=$item->__toArray();
-		$id=self::insertRow(self::getTable(),$data);
+
+		$id=$this->db->insertRow($this->getTable(),$data);
 		$item->id=$id;
 		if ($id==null)
 		{
@@ -30,29 +35,30 @@ class caseItemStatusModel extends OmniModel
 		return $item;
 		
 	}
-	public static function update(WFCase\WFCaseItem $item)
+	public function update(WFCase\WFCaseItem $item)
 	{
 		if ($item->status==\OmniFlow\enum\StatusTypes::Completed)
 			$item->completed=date("Y-m-d H:i:s");
 
 		$data=$item->__toArray();
 		
-		self::updateRow(self::getTable(),$data,"id=$item->id");
+		$this->db->updateRow($this->getTable(),$data,"id=$item->id");
 		
 		return $item;
 	}
 
-    public static function getTableDDL()
+    public function getTableDDL()
     {
         $table=array();
-        $table['name']='wf_caseitemstatus';
+        $table['name']=$this->getTable();
 	$table['sql']="		
                             (
 				`id` int(11) NOT NULL AUTO_INCREMENT,
 				`caseId` int(11) DEFAULT NULL,
 				`itemId` int(11) DEFAULT NULL,
-				`processNodeId` varchar(45) DEFAULT NULL,
+				`flowId` int(11) DEFAULT NULL,
 				`userId` varchar(45) DEFAULT NULL,
+				`actor` varchar(45) DEFAULT NULL,
 				`status` varchar(45) DEFAULT NULL,
 				`statusDate` datetime DEFAULT NULL,
 				PRIMARY KEY (`id`),

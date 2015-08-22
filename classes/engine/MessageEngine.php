@@ -39,7 +39,7 @@ class MessageEngine
          */
         public static function LocateMessageReceipent($messageName,$values)
         {
-            $queryResults=ProcessItemModel::getMessageItem($messageName);
+            $queryResults=ProcessItemModel::getInstance()->getMessageItem($messageName);
             
             if (count($queryResults)==0)
             {
@@ -67,7 +67,7 @@ class MessageEngine
                         $value=$values[$key];
                         $keyValues[$key]=$value;
                     }
-                    $caseItem=CaseItemModel::locateMessageItem($messageName,$keyValues);
+                    $caseItem=CaseItemModel::getInstance()->locateMessageItem($messageName,$keyValues);
                 }
             }
         }

@@ -10,58 +10,63 @@ namespace OmniFlow;
  */
 class CaseModel extends OmniModel
 {
-
-public static function getTable()
+        public static function getInstance()
+        {
+            return new CaseModel();
+        }
+public function getTable()
 {
-    return self::getPrefix()."case";
+    return $this->db->getPrefix()."wf_case";
 }
 
-public static function resetData()
-{
-    
-}
+
         // The database connection
-public static function getList($status=null)
+public  function getList($status=null)
 {
-    $table=self::getTable();
-       return self::select("Select * from $table");
+    $table=$this->getTable();
+
+
+       return $this->db->select("Select * from $table");
 }
-public static function insert(WFCase\WFCase $case)
+public  function insert(WFCase\WFCase $case)
 {
         $data=$case->__toArray();
-        $id=self::insertRow(self::getTable(),$data);
+        
+        $id=$this->db->insertRow($this->getTable(),$data);
         $case->caseId=$id;
         return $case;
 }
 	
-public static function update(WFCase\WFCase $case)
+public  function update(WFCase\WFCase $case)
 	{
 	$data=$case->__toArray();
-	self::updateRow(self::getTable(),$data,"caseId=$case->caseId");
+
+	$this->db->updateRow($this->getTable(),$data,"caseId=$case->caseId");
 
 	return $case;
 	
 	}
 	
-    public static function load($caseId,WFCase\WFCase $case)
+    public  function load($caseId,WFCase\WFCase $case)
     {
 
-	$table=self::getPrefix()."case";
+	$table=$this->getTable();
 		
-	$rows=self::select("select * from $table where caseId =$caseId");
+	$rows=$this->db->select("select * from $table where caseId =$caseId");
 	if (count($rows)==1)
 	{
 		$row=$rows[0];
         	$case->__fromArray($row);
 
 	}
-	caseItemModel::loadCase($case);
+	CaseItemModel::getInstance()->loadCase($case);
+	AssignmentModel::getInstance()->loadCase($case);
 	return $case;	
     }
-    public static function getTableDDL()
+    public function getTableDDL()
     {
         $table=array();
-        $table['name']='wf_case';
+        $table['name']=$this->getTable();
 	$table['sql']="		
                         (
 				`caseId` int(11) NOT NULL AUTO_INCREMENT,

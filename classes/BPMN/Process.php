@@ -196,10 +196,14 @@ class Process extends OmniFlow\WFObject
                 $arr['actors']=$actors;
 		$arr['accessRules']=$accessRules;
 		$arr['notificationRules']=$notificationRules;
-		$arr['descriptions']= \OmniFlow\Describer::getProcessDescription($this);
+                $arr['descriptions']= \OmniFlow\Describer::getProcessDescription($this);
 		
                 
-                $json=json_encode($arr);            
+                $json=json_encode($arr);     
+                $err=json_last_error();
+                
+                $json2=json_encode(\OmniFlow\Helper::utf8ize($arr));
+                
 		return $json;
 	}
 	function Init()
@@ -367,20 +371,20 @@ class Process extends OmniFlow\WFObject
             OmniFlow\ScriptEngine::Validate($this->processName);
         }
 	
-	public static function Load($fileName,$fromXML=false)
+	public static function Load($fileName,$loadExtensions=true)
 	{
 		OmniFlow\Context::Log(INFO,'Process:load '.$fileName);
 		$jsonPath = OmniFlow\Config::getConfig()->processPath.'/'.$fileName.'.json';
 		//if (!file_exists($jsonPath))
-			$fromXML=true;
+		$fromXML=true;
 
 		$start = microtime(true);
 		if ($fromXML)
 		{
 		$loader=new OmniFlow\XMLLoader();
-		$loader->loadFile($fileName);
+		$loader->loadFile($fileName,$loadExtensions);
 		$proc=$loader->proc;
-		$proc->SaveJson($jsonPath);
+//		$proc->SaveJson($jsonPath);
 		$time_elapsed_secs = microtime(true) - $start;
 		OmniFlow\Context::Log(INFO,'Process:load '.$fileName.' - ended @ '.$time_elapsed_secs);
 		

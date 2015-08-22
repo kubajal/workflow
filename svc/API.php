@@ -50,11 +50,14 @@ class ProcessSvc
                     else
                     {
                         $starter=$starter[0];
-                        $starter=$starter->id;
+                        $starterId=$starter->id;
                     }
                 }
+                
+                WFCase\Assignment::CanPerform($starter, null);
+                        
 		$newCase=WFCase\WFCase::NewCase($proc);
-		$proc->Start($newCase,$starter);
+		$proc->Start($newCase,$starterId);
 		return $newCase;
 		
 	}
@@ -158,6 +161,29 @@ class TaskSvc
 		
 		return $case;
 	}
+}
+Class Tester
+{
+    public function StartProcess($processName)
+    {
+        
+    }
+    public function SimulateUser($userId)
+    {
+        
+    }
+    public function SimulateRole($roleName)
+    {
+        
+    }
+    public function SimulateUserGroup($userGroup,$userScope=null)
+    {
+        
+    }
+    public function InvokeTask($taskId)
+    {
+        
+    }
 }
 Class CaseSvc
 {

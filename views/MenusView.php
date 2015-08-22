@@ -10,7 +10,44 @@ class MenusView
     static function displayMenus($localMenus=array())
 {
     $user=  Context::getUser();
+?>
+<script>
+var originalParent;    
+jQuery( document ).ready(function() {
 
+        originalParent=jQuery('#omni_page').parent();
+
+        jQuery("#maxButton").click(function(){
+            var parent=jQuery('#omni_page').parent();
+            if (parent.is('body'))
+            {
+                var element = jQuery('#omni_page').detach();
+                jQuery(originalParent).append(element);
+            }
+            else
+            {
+                var element = jQuery('#omni_page').detach();
+                jQuery('body').append(element);
+            }
+                
+            jQuery("#omni_page").toggleClass("maxScreen");
+            jQuery("#page").toggleClass("hide");
+        
+            var op=jQuery("omni_page");
+
+            if (typeof main_layout !== 'undefined') {
+                    main_layout.setSizes();
+                }
+
+    });    
+});    
+</script>
+<div id='menu-bar'>
+    <div style="width:40px;float:left">
+                <image  id='maxButton' 
+                        src="<?php echo Context::getInstance()->omniBaseURL;?>/images/max-screen.png" />
+    </div>
+<?php
     $canDesign=false;
     
     if ($user->isLoggedIn())
@@ -22,26 +59,21 @@ class MenusView
     if (count($localMenus)>0)
     {
 ?>
-<div id='omni_menus' style="float:left;width: 60%;
-  padding-left: 40px; 
-  background-color: rgb(238, 220, 239);"> </div>
-<div id='omni_menus_local' style="float:right;width: 40%;
-  padding-left: 40px; 
-  background-color: rgb(238, 220, 239);"> </div>
+<div id='omni_menus'> </div>
+<div id='omni_menus_local'> </div>
 </div>
 <?php
     }
     else
     {
 ?>
-<div id='omni_menus' style="float:left;width: 100%;
-  padding-left: 40px; 
-  background-color: rgb(238, 220, 239);"> </div>
+<div id='omni_menus'> </div>
 <?php
         
     }
         
 ?>
+</div>
 <!-- MenusView.php:displayMenus -->
 
 <div style="border: 1px solid #000000;overflow: auto;width: 100%">
@@ -54,6 +86,7 @@ var omniMenus = new dhtmlXMenuObject("omni_menus");
             omniMenus.addNewChild("Admin", 0, "process.list", "List Processes", false); 
             omniMenus.addNewChild("Admin", 1, "admin.listEvents", "List Events", false); 
             omniMenus.addNewChild("Admin", 2, "admin.resetCaseData", "Reset Case Data", false); 
+            omniMenus.addNewChild("Admin", 2, "admin.installDB", "Reset All Data", false); 
 <?php } ?>
 	omniMenus.addNewSibling(null, "Cases", "Cases", false); 
             omniMenus.addNewChild("Cases", 0, "case.list", "List", false); 

@@ -101,6 +101,20 @@ class Flow extends ProcessItem
 		OmniFlow\Context::Log(LOG,"**Flow::Executing: $this->type - $this->label - from: $from->label $this->id -input=$input" );
 	
 		$caseItem=$from;
+                
+                // check condition now
+                
+                if ($this->condition!=='' && $this->condition !=null )
+                {
+                    $ret=  \OmniFlow\ActionManager::ExecuteCondition($case,$this->condition);
+                     if ($ret!=true) {
+                         
+        		OmniFlow\Context::Log(LOG,"Flow::condition is not true - skipping flow" );
+                        return true;
+                         
+                     }
+                         
+                }
 	
 		if (!$this->Run($caseItem,$input,$from))
 		{
@@ -119,7 +133,6 @@ class Flow extends ProcessItem
 	public function Run(WFCase\WFCaseItem $caseItem,$input,WFCase\WFCaseItem $from)
 	{
 		OmniFlow\Context::Log(LOG,"Run Flow: $this->type - $this->label - input=$input");
-                // TODO: check condition here
                 
                 // Set Case Status here
                 // a) Explicit from flow CaseStatus

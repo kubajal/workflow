@@ -194,9 +194,9 @@ function BuildCaseItems()
 	gridItems = itemsList.attachGrid();
 	gridItems.setIconsPath(dxImgPath);
         
-	gridItems.setHeader("No,Type,Label,Status,Started,Completed,Actor,Action");
-	gridItems.setColTypes("ro,ro,ro,ro,ro,ro,ro,link");
-	gridItems.setColumnIds("rowNo,type,label,status,started,completed,actor,action");
+	gridItems.setHeader("No,Type,Label,Action,Status,Started,Completed,Actor");
+	gridItems.setColTypes("ro,ro,ro,link,ro,ro,ro,ro");
+	gridItems.setColumnIds("rowNo,type,label,action,status,started,completed,actor");
 	
 	gridItems.setInitWidths("24,100,100,70,120,120,70,150");
 //	gridItems.setColAlign("left,left");
@@ -212,7 +212,7 @@ function BuildCaseItems()
 
 	var ItemDetails = layout_2.cells('b');
 	ItemDetails.hideHeader();
-	
+/*	
 	itemsMenu.addNewSibling(null, "run", "Simulate Process", false); 
 	itemsMenu.addNewSibling(null, "debug", "View Model", false); 
 	itemsMenu.addNewSibling(null, "cancel", "Cancel", false); 
@@ -242,9 +242,11 @@ function BuildCaseItems()
 		}
 	});
 
-	
+	*/
+       
 	itemTabbar = ItemDetails.attachTabbar();
 	
+/*       
 	var tab=addTab(itemTabbar,'itemDetails',"Item Details","itemDetails");
 	tab.setActive();
 	
@@ -290,12 +292,13 @@ var str1 =
 		{"type":"input","name":"form_input_messageFinalCondition","label":"Final Message Condition","labelWidth":105,"inputWidth":150}
 	]}
 ] 
+*/
 
 var str2 = [{"type":"fieldset","name":"Action","label":"Action","inputWidth":"auto","list":[{"type":"select","name":"form_input_actionType","label":"Action Type","labelWidth":105,"inputWidth":150,"options":[{"text":"None","value":"None"},{"text":"Form","value":"Form"},{"text":"Script","value":"Script"},{"text":"Function","value":"Function"},{"text":"Email","value":"Email"},{"text":"Web Service","value":"Web Service"}]},{"type":"input","name":"form_input_actionScript","rows":5,"label":"Action Script","labelWidth":105,"inputWidth":425},{"type":"input","name":"form_input_actionParameters","label":"Action Parameters","labelWidth":105,"inputWidth":150}]}]
 var str3 = [{"type":"fieldset","name":"Condition","label":"Condition","inputWidth":"auto","list":[
 	{"type":"input","name":"form_input_condition","rows":5,"label":"Condition","labelWidth":105,"inputWidth":425}]}] 
 	
-	ProcessItemForm = tab.attachForm(str1);
+//	ProcessItemForm = tab.attachForm(str1);
 
 	
 	jQuery(ProcessItemForm).attr('id', 'ProcessItemForm');

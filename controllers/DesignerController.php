@@ -114,7 +114,8 @@ class DesignerController extends Controller{
                 }
 		$proc=BPMN\Process::Load($file,true);
 
-                ProcessExtensions::SaveExtensionFromJson($proc, $jsonData);
+                ProcessExtensions::LoadExtensionFromJson($proc, $jsonData);
+                ProcessExtensions::saveExtensions($proc);
                 
 		}
 

@@ -8,6 +8,7 @@
 
 namespace OmniFlow;
 
+
 /**
  * Description of Context
  *
@@ -19,57 +20,26 @@ const INFO = "Info";
 const LOG = "Log";
 const VALIDATION_ERROR="validationError";
 
-class User extends WFObject
-{
-    	var $id=null;
-	var $name;
-	var $email;
-	var $clientId;	/* for multi tenants implementation */
-        var $userCapabilities=array();
-
-    public function can($capability)
-    {
-        $caps=$this->userCapabilities;
-        
-        if (isset($caps[$capability]))
-        {
-            return $caps[$capability];
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    public function addCapability($capability)
-    {
-        $this->userCapabilities[$capability]=true;
-    }
-    
-    public function isLoggedIn()
-    {
-        if ($this->id!==null)
-            return true;
-        else
-            return false;
-    }
-}
 class Context extends WFObject
 {
 	var $env; 		/*D:Development,T:Text,P:Production */
 	var $user;
-	var $roleId;
         var $fromWordPress;
         var $feedback=array();
         var $errors=array();
         var $dataToSave=array();
         var $omniBaseURL="";
+        var $recording=false;
         
     static $validitionErrorsCount;        
     
     protected static $_instance=null;
         
-
+    /*
+     * Context object need to handle simulation
+     *  set user
+     *  recording mode
+     */
     protected function __construct()
     {
     }
@@ -82,11 +52,7 @@ class Context extends WFObject
      *  Saving Data
      *  addDataToSave(modelObject,method,sourceObject
      */
-    public function TestData()
-    {
-        self::addDataToSave("CaseModel", "insert",$case);
-        self::addDataToSave("CaseItemModel", "insert",$caseItem);
-    }
+
     public static function SaveData()
     {
         
@@ -110,7 +76,7 @@ class Context extends WFObject
     public static function getuser()
     {
         if (self::getInstance()->user==null)
-            self::getInstance()->user=new User();
+            self::getInstance()->user=new WFUser\User();
         
         return self::getInstance()->user;
     }
@@ -146,26 +112,27 @@ class Context extends WFObject
 	global $logger;
 	if ($logger==null)
 	{
-		\Logger::configure(array(
-				'rootLogger' => array(
-						'appenders' => array('default'),
-				),
-				'appenders' => array(
-						'default' => array(
-								'class' => 'LoggerAppenderFile',
-								'layout' => array(
-										'class' => 'LoggerLayoutSimple'
-								),
-								'params' => array(
-										'file' => OMNIWORKFLOW_PATH.'/logs/my.log',
-										'append' => true
-								)
-						)
-				)
-		));
+            $config=array(
+                'appenders' => array(
+                    'default' => array(
+                        'class' => 'LoggerAppenderDailyFile',
+                        'layout' => array(
+                            'class' => 'LoggerLayoutSimple',
+                        ),
+                        'params' => array(
+                            'datePattern' => 'Y-m-d',
+                            'file' => OMNIWORKFLOW_PATH.'/logs/'.'file-%s.log',
+                        ),
+                    ),
+                ),
+                'rootLogger' => array(
+                    'appenders' => array('default'),
+                ),
+            );            
 
-
-		$logger = \Logger::getLogger("main");
+            \Logger::configure($config);
+            
+            $logger = \Logger::getLogger("main");
 	}
 
 	/*if ($type==INFO)
@@ -176,7 +143,7 @@ class Context extends WFObject
 	if($type==ERROR)
 	{
 		$logger->error($msg);
-//		echo '<br /><div class="error" style="float: left;">Error: </div><div>'.$msg.'</div>';
+		echo '<br /><div class="error" style="float: left;">Error: </div><div>'.$msg.'</div>';
 	}
 	if($type==VALIDATION_ERROR)
 	{

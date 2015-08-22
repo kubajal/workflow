@@ -27,16 +27,7 @@ use OmniFlow\ActionManager;
  *
  * @author ralph
  */
-class WFCaseItemStatus extends OmniFlow\WFObject
-{
-        var $id;
-        var $caseId;
-        var $processNodeId;
-        var $itemId;
-        var $userId;
-        var $status;
-}                       
-			
+		
 
 class WFCaseItem extends OmniFlow\WFObject
 		{
@@ -105,7 +96,21 @@ class WFCaseItem extends OmniFlow\WFObject
 	{
 		return ActionManager::getActionView($this,$postForm);
 	}
-	
+	public function UserTake()
+        {
+            Assignment::UserTake($this);
+            
+        }
+	public function UserRelease()
+        {
+            Assignment::UserRelease($this);
+            
+        }
+	public function AssignUser($userId)
+        {
+            Assignment::AssignUser($this, $userId);
+            
+        }
 	public function Update($status)
 	{
 		OmniFlow\Context::Log(INFO,"CaseItem:Update $this->id status: $this->status to: $status");
@@ -113,7 +118,7 @@ class WFCaseItem extends OmniFlow\WFObject
 		$this->status=$status;
 //		$this->result=$this->getProcessItem()->result;
 
-		$db=new OmniFlow\caseItemModel();
+		$db=new OmniFlow\CaseItemModel();
 		$db->update($this);
 		$this->case->proc->Notify(OmniFlow\enum\NotificationTypes::CaseItemSaved,$this);
 		

@@ -37,7 +37,7 @@ function Action_simulate($req)
  */
 function Action_list($req)
 {
-            $rows=DB::listMessages();
+            $rows=  OmniModel::getInstance()->listMessages();
 	
             
             $v=new Views();

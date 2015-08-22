@@ -10,20 +10,25 @@ namespace OmniFlow;
  */
 
 
-class caseItemModel extends OmniModel
+class CaseItemModel extends OmniModel
 {
-    public static function getTable()
+        public static function getInstance()
+        {
+            return new CaseItemModel();
+        }    
+    public function getTable()
     {
-    return self::getPrefix()."caseItem";
+        return $this->db->getPrefix()."wf_caseitem";
     }
 
-    public static function insert(WFCase\WFCaseItem $item)
+    public  function insert(WFCase\WFCaseItem $item)
 	{
 		
 		$item->started=date("Y-m-d H:i:s");
 		
 		$data=$item->__toArray();
-		$id=self::insertRow(self::getTable(),$data);
+
+		$id=$this->db->insertRow($this->getTable(),$data);
 		$item->id=$id;
 		if ($id==null)
 		{
@@ -32,22 +37,22 @@ class caseItemModel extends OmniModel
 		return $item;
 		
 	}
-	public static function update(WFCase\WFCaseItem $item)
+	public  function update(WFCase\WFCaseItem $item)
 	{
 		if ($item->status==\OmniFlow\enum\StatusTypes::Completed)
 			$item->completed=date("Y-m-d H:i:s");
 
 		$data=$item->__toArray();
-		
-		self::updateRow(self::getTable(),$data,"id=$item->id");
+		$this->db->updateRow($this->getTable(),$data,"id=$item->id");
 		
 		return $item;
 	}
-    public static function loadCase(WFCase\WFCase $case)
+    public  function loadCase(WFCase\WFCase $case)
     {
-       	$table=self::getTable();
+       	$table=$this->getTable();
         $caseId=$case->caseId;
-	$rows=self::select("select * from $table where caseId =$caseId");
+
+	$rows=$this->db->select("select * from $table where caseId =$caseId");
 	
 	foreach ($rows as $row)
 	{
@@ -56,10 +61,10 @@ class caseItemModel extends OmniModel
             $case->items[]=$item; 
 	}
     }
-    public static function getTableDDL()
+    public function getTableDDL()
     {
         $table=array();
-        $table['name']='wf_caseitem';
+        $table['name']=$this->getTable();
 	$table['sql']="		
                             (
 				`id` int(11) NOT NULL AUTO_INCREMENT,
@@ -95,12 +100,12 @@ class caseItemModel extends OmniModel
      * locates and returns the CaseItem that responds to the message with the key values
      * 
      */
-    public static function locateMessageItem($messageName,$keyValues)
+    public  function locateMessageItem($messageName,$keyValues)
     {
-        $table=self::getTable();
+        $table=$this->getTable();
         $messageKeys=  serialize($keyValues);
-        
-        $rows=self::select("select id,caseId 
+
+        $rows=$this->db->select("select id,caseId 
                 from $table 
                 where status not in ('Completed','Terminated')
                 and message = '$messageName'

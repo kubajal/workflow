@@ -15,7 +15,7 @@ namespace OmniFlow;
  */
 class ProcessExtensions 
  {
-    public static function SaveExtensionFromJson(BPMN\Process $proc,$json)
+    public static function LoadExtensionFromJson(BPMN\Process $proc,$json)
     {
         
 	$properties=MetaProperty::getActivityProperties();
@@ -121,7 +121,7 @@ class ProcessExtensions
             foreach($actors as $ar)
             {
                 
-               $actor= new Actor();
+               $actor= new \OmniFlow\BPMN\Actor();
                $actor->__fromArray($ar);
                $proc->actors[]=$actor;
             } 
@@ -138,7 +138,7 @@ class ProcessExtensions
             foreach($ars as $ar)
             {
                 
-               $acessRule= new AccessRule();
+               $acessRule= new \OmniFlow\BPMN\AccessRule();
                $acessRule->__fromArray($ar);
                $proc->accessRules[]=$acessRule;
             } 
@@ -160,7 +160,7 @@ class ProcessExtensions
         }
       
         
-        self::saveExtensions($proc);
+//        self::saveExtensions($proc);
     }
     
     static function saveExtensions(BPMN\Process $proc)
@@ -429,7 +429,7 @@ class ProcessExtensions
 
  		foreach($xml->xpath('//actors/actor') as $item) {
                     
-                    $actor= new Actor();
+                    $actor= new \OmniFlow\BPMN\Actor();
                     $actor->__fromXML($item);
                     $proc->actors[]=$actor;
                     
@@ -440,14 +440,14 @@ class ProcessExtensions
                 
  		foreach($xml->xpath('//accessRules/accessRule') as $item) {
                     
-                    $acessRule= new AccessRule();
+                    $acessRule=new \OmniFlow\BPMN\AccessRule();
                     $acessRule->__fromXML($item);
                     $proc->accessRules[]=$acessRule;
                     
  		}
  		foreach($xml->xpath('//notificationRules/notificationRule') as $item) {
                     
-                    $acessRule= new NotificationRule();
+                    $acessRule= new \OmniFlow\BPMN\NotificationRule();
                     $acessRule->__fromXML($item);
                     $proc->notificationRules[]=$acessRule;
                     

@@ -60,11 +60,11 @@ class QueueEngine {
 
             Context::Log(INFO, "checkQueue item");
             
-            DB::startTransaction();
+            OmniModel::getInstance()->startTransaction();
 
             self::executeQueueItem($nextItem);
         
-            DB::commit();
+            OmniModel::getInstance()->commit();
             
             } 
             catch (Exception $ex) {

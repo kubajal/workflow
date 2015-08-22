@@ -127,18 +127,12 @@ class Event extends Node
 	{
 		return true;
 	}
-	
-	function Run(WFCase\WFCaseItem $caseItem,$input,$from)
-	{
-		// an event is invoked;
-		/*
-		 * Need to know the difference between executed as in Started and Invoked because of a message
-		 * 
-		 */
+	function NeedToWait(WFCase\WFCaseItem $caseItem,$input,$from)
+        {
 		if ($this->hasTimer)
 		{
 			// wait for the timer
-			return false;
+			return true;
 		}
 		if (($this->hasMessage) && ProcessItem::isSenderType($this->type))
 		{
@@ -161,13 +155,25 @@ class Event extends Node
 		if ($this->type=='intermediateCatchEvent')
 		{
                         if ($from===null)
-                            return true;
+                            return false;
 			if ($from->type=='messageFlow')
-				return true;
-			else
 				return false;
+			else
+				return true;
 		}
-		return true;
+		return false;
+        }
+
+	function Run(WFCase\WFCaseItem $caseItem,$input,$from)
+	{
+		// an event is invoked;
+		/*
+		 * Need to know the difference between executed as in Started and Invoked because of a message
+		 * 
+		 */
+            $this->checkAccessRules($caseItem);
+            $caseItem->UserTake();
+            return true;
 	}
 	/*
 	 * 	Event::Finish

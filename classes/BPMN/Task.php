@@ -53,11 +53,35 @@ class Task extends Node
 	
 		return parent::describe();
 	}
-	
+	function NeedToWait(WFCase\WFCaseItem $caseItem,$input,$from)
+        {
+ 		OmniFlow\Context::Log(LOG,"Run Node: class:Task type: $this->type - $this->label - $this->id $this->actionScript");
+            
+		if ($this->type=="receiveTask")
+		{
+                    if ($from===null)
+                            return false;
+                    
+                    if ($from->type=='messageFlow')
+                            return false;
+                    else
+                        return true;
+		}
+		if (($this->type=="userTask")||($this->type=="task"))
+		{
+                        return true; // Don't continue
+		}
+                return true;
+        }
+        
 	function Run(WFCase\WFCaseItem $caseItem,$input,$from)
 	{
  		OmniFlow\Context::Log(LOG,"Run Node: class:Task type: $this->type - $this->label - $this->id $this->actionScript");
-            
+                
+                $this->checkAccessRules($caseItem);
+                $caseItem->UserTake();
+
+                /* moved to CheckWait ---
 		if ($this->type=="receiveTask")
 		{
                     if ($from===null)
@@ -68,9 +92,19 @@ class Task extends Node
                     else
                         return false;
 		}
+                 * 
+                 */
 		if (($this->type=="userTask")||($this->type=="task"))
 		{
-		return false;
+    
+                	$actionView=$caseItem->getActionView($postForm);
+                
+                        \OmniFlow\Context::Log(INFO,"actionView:$actionView");
+
+                        if ($actionView===true)
+                                return true;	
+                            \OmniFlow\ActionManager::defaultForm($caseItem);
+                        return true;
 		}
 		
 		if ($this->actionScript!="")

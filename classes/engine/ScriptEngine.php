@@ -126,8 +126,9 @@ function executeNode($node,$type='')
         case 'block':
             foreach($node->children as $child)
             {
-            return $this->executeNode($child);
+            $ret=$this->executeNode($child);
             }
+            return $ret;
             break;
         case 'statement':
         case 'expression':

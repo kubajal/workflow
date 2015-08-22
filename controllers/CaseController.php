@@ -17,8 +17,7 @@ class CaseController extends Controller{
 
 public function Action_list($req)
 {
-
-		$cases=CaseModel::getList();
+		$cases=CaseModel::getInstance()->getList();
                 $v=new CaseView();
 		$v->header();
 		$v->ListCases($cases);

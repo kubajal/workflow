@@ -64,10 +64,17 @@ public function displayForm(WFCase\WFCaseItem $item)
                 $edit=$var->canEdit();
                 $view=$var->canView();
                 $type=$dataElement->dataType;
+                $readOnly="";
+                $isReadOnly=false;
 
                 Context::Log(INFO,"default form field name: $name type: $type".print_r($var,true).'edit:'.$edit.'view:'.$view);
                 if ((!$view) && (!$edit))
                     continue;
+                
+                if (!$edit) {
+                    $readOnly='readonly';
+                    $isReadOnly=true;
+                    }
                 
                  if ($label=='')
                     $label=$name;
@@ -76,10 +83,10 @@ public function displayForm(WFCase\WFCaseItem $item)
 
                 $val=$case->getValue($name);
 
-                if ($dataElement->validValues!='')
-                    $type='select';
+//                if ($dataElement->validValues!='')
+//                    $type='select';
 
-                $std="class='form-control' id='$fld' placeholder='$label'";
+                $std="class='form-control' name='$fld' id='$fld' placeholder='$label' $readOnly";
                 $input='';
                 
             switch($type)
@@ -89,17 +96,42 @@ public function displayForm(WFCase\WFCaseItem $item)
                     break;
                 case 'Boolean':
                     $checked='';
-                    if ($val=='Yes')
-                        $checked='checked';
+                    if ($dataElement->validValues!=='') {
 
-                    $input="<input type='checkbox' $std value='Yes' $checked />";
-                    break;
-                case 'select':
+                        if ($isReadOnly) {
+                            
+                            $input="<input type='text' $std value='$val' $readOnly>";
+                            
+                        }
+                        else {
+                            
+                            $values=explode('\r',$dataElement->validValues);
+                            $values= preg_split ('/$\R?^/m', $dataElement->validValues);
+                            foreach($values as $sval) {
+                             if ($val==$sval)
+                                 $checked='checked';
+                             
+                                $input.="<input type='radio' class='col-xs-1' name='$fld' id='$fld' value='$sval' $checked /> "
+                                        . "<span class='col-xs-3'>$sval</span>";
+                            }
+                        }
+                    }
+                    else {
+                         if ($val=='Yes')
+                             $checked='checked';
+                         if ($isReadOnly)
+                             $readOnly.=' disabled';
+                         $input=" <input type='checkbox' $std value='Yes' $checked $readOnly />";
+                    }
+                     break;
+                case 'Select':
                     {
-                        Context::Debug("valid values ".$dataElement->validValues);
+                        if ($isReadOnly)
+                            $readOnly.=' disabled';
+                        
                         $values=explode('\r',$dataElement->validValues);
                         $values= preg_split ('/$\R?^/m', $dataElement->validValues);
-                        $valInput="<select name='$fld' id='$fld'>";
+                        $valInput="<select name='$fld' id='$fld' $readOnly>";
                         foreach($values as $sval)
                         {
                                 $sel="";
@@ -113,14 +145,17 @@ public function displayForm(WFCase\WFCaseItem $item)
                         break;
                     }
                 case 'Date':
-                    $input="<input type='text' class='date' value='$val' id='$fld'>";
+                    if ($isReadOnly) 
+                        $input="<input type='text' value='$val' id='$fld' name='$fld' $readOnly>";
+                    else
+                        $input="<input type='text' class='date' value='$val' id='$fld' name='$fld' $readOnly>";
                     break;
                 case 'File':
                     		
-                    $input="<input  id='$fld' class='input-file' type='file'>";
+                    $input="<input  id='$fld' name='$fld' class='input-file' type='file' $readOnly>";
                     break;
                 default: 
-                    $input="<input type='text' $std value='$val' >";
+                    $input="<input type='text' $std value='$val' $readOnly>";
                     break;
                 }
                 $this->Field($fld,$label,$input,$help);
@@ -142,7 +177,7 @@ jQuery('.date').datepicker();
 public function Field($field,$label,$input,$help="")
 {
 echo "
-<div class='form-group'>
+<div class='form-group' style='clear:both;'>
   <label class='control-label col-xs-3' for='$field'>$label</label>
   <div class='col-xs-9'>
      $input 

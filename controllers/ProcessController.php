@@ -16,8 +16,10 @@ namespace OmniFlow;
 class ProcessController extends Controller{
     public function Action_validate($req)
     {
-	$file=$req["file"];
-	$proc=BPMN\Process::Load($file,true);
+        $proc=$this->Action_saveJson($req,false);
+        
+//	$file=$req["file"];
+//	$proc=BPMN\Process::Load($file,true);
         
         $proc->Validate();
         if (Context::$validitionErrorsCount==0)
@@ -99,7 +101,7 @@ class ProcessController extends Controller{
     }		
     
     public function Action_list($req) {
-		$rows=DB::listProcesses();
+		$rows=ProcessModel::getInstance()->listProcesses();
                 
 		$actions['modeler.edit']='Model';
 		$actions['process.describe']='Design';
@@ -124,7 +126,7 @@ class ProcessController extends Controller{
         $db->unRegister($file);
     }		
 
-    public function Action_saveJson($req) {
+    public function Action_saveJson($req,$saveToXML=true) {
 //		header('Content-Type: application/json');
 
 		$file=$req["file"];
@@ -145,11 +147,15 @@ class ProcessController extends Controller{
 		Context::Log(INFO,'json_decode '.var_export($jsonData,true). ' Json Error:'.$jsonError);
 		Context::Log(INFO,'json_decode data  '.var_export($jsonData['dataElements'],true));
                 }
-		$proc=BPMN\Process::Load($file,true);
+		$proc=BPMN\Process::Load($file,false);
 
-                ProcessExtensions::SaveExtensionFromJson($proc, $jsonData);
+                ProcessExtensions::LoadExtensionFromJson($proc, $jsonData);
+                if ($saveToXML)
+                    ProcessExtensions::saveExtensions($proc);
                 
-		}
+                return $proc;
+                
+	}
 
     public function Action_show($req) {
 		$actions['modeler.edit']='Model';

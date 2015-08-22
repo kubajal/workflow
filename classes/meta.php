@@ -236,7 +236,7 @@ type: "select", label: "Account type", options:[
 		MetaProperty::Add($a,$gr,'actor','Actor',1,MetaProperty::Editable)->xmlExt=true;
 		MetaProperty::Add($a,$gr,'subProcess','Sub-Process',2,MetaProperty::EditDisplay);
 		$p=MetaProperty::Add($a,$gr,'caseStatus','Case Status',2,MetaProperty::EditDisplay);
-                        $p->xmlExt=true;;
+                        $p->xmlExt=true;
 		
 		$gr="Navigation";
 		MetaProperty::Add($a,$gr,'inflowsLabels','In-Flows',1,MetaProperty::EditDisplay);
@@ -245,7 +245,6 @@ type: "select", label: "Account type", options:[
 		$gr="Flow Navigation";
 		MetaProperty::Add($a,$gr,'fromNodeLabel','From',1,MetaProperty::EditDisplay);
 		MetaProperty::Add($a,$gr,'toNodeLabel','To',2,MetaProperty::EditDisplay);
-		MetaProperty::Add($a,$gr,'caseStatus','Case Status',3,MetaProperty::EditDisplay);
 		
 		//-- timer
 		$gr="Timer";

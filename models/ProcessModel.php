@@ -10,44 +10,46 @@ namespace OmniFlow;
  */
 class ProcessModel extends OmniModel
 {
-    public static function getTable()
+            public static function getInstance()
+        {
+            return new ProcessModel();
+        }
+    public function getTable()
     {
-        return self::getPrefix()."process";
+        return $this->db->getPrefix()."wf_process";
     }
-    public static function ListProcesses()
+    public function ListProcesses()
 	{
-		$db=new DB();
-		$table=self::getTable();
+		$table=$this->getTable();
 		
-		return $db->select("select *
+		return $this->db->select("select *
 					from $table
 					");
 			}
 	public function UnRegister($processName)
 	{
-		$conn=self::connect();
-		$table=  ProcessItemModel::getTable();
-		$table1=self::getTable();
+		$table= ProcessItemModel::getInstance()->getTable();
+		$table1=$this->getTable();
 		
 		$sql="delete from $table where processId 
 				in (select processId from $table1 where processname ='$processName')";
 				
 			
-		$result = self::query($sql);
+		$result = $this->db->query($sql);
 		
 		Context::Log(INFO,'db:unregisterProcess '.$sql.' res:'.$result);
 		if ($result==false)
 		{
-			Context::Log(ERROR , self::error().$sql);
+			Context::Log(ERROR , $this->db->error().$sql);
 		}
 		$sql="delete from $table1 where processname ='$processName'";
 			
-		$result = self::query($sql);
+		$result = $this->db->query($sql);
 		
 		Context::Log(INFO,'db:unregisterProcess 2 '.$sql.' res:'.$result);
 				if ($result==false)
 		{
-			Context::Log(ERROR , self::error().$sql);
+			Context::Log(ERROR , $this->db->error().$sql);
 		}
 		
 		
@@ -56,9 +58,8 @@ class ProcessModel extends OmniModel
 	}
 	public function Register(Process $process)
 	{
-		$conn=self::connect();
 
-                self::startTransaction();
+                $this->db->startTransaction();
                 
 		$data=array(
 			'processName'=> $process->processName
@@ -66,7 +67,7 @@ class ProcessModel extends OmniModel
 			,'updated'=>null					
 		);
 		
-		$id=self::insertRow(self::getTable(),$data);
+		$id=$this->db->insertRow($this->getTable(),$data);
 		
 		
 		foreach($process->items as $item)
@@ -91,31 +92,30 @@ class ProcessModel extends OmniModel
 				'message'=> $item->message
 						);
 		
-				self::insertRow(ProcessItemModel::getTable(),$data);
+				self::insertRow(ProcessItemModel::getInstance()->getTable(),$data);
 			}	
 		}
-                self::commit();
+                $this->db->commit();
 				
 	}
         
-    public static function listStartEvents()
+    public function listStartEvents()
     {
-		$db=new DB();
-		$table=  caseItemModel::getTable();
-                $pTable= ProcessModel::getTable();
-                $piTable= ProcessItemModel::getTable();
+		$table=CaseItemModel::getInstance()->getTable();
+                $pTable=ProcessModel::getInstance()->getTable();
+                $piTable=ProcessItemModel::getInstance()->getTable();
 		$sql="select 'Process Item' as source ,p.processName as processName, pi.id as id,pi.processNodeId,null as caseId,pi.type,subType,label,timer,timerDue,message,signalName "
                         . " from $piTable pi
                             join $pTable  p on p.processId=pi.processId
                             where  subType=''";
                 
-		return $db->select($sql);
+		return $this->db->select($sql);
     }
         
-    public static function getTableDDL()
+    public function getTableDDL()
     {
         $table=array();
-        $table['name']=self::getTable();
+        $table['name']=$this->getTable();
 	$table['sql']="		
 		 (
 				`processId` int(11) NOT NULL AUTO_INCREMENT,

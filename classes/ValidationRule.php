@@ -33,7 +33,7 @@ class ValidationRule
 	{
 		foreach(self::getRules() as $rule)
 		{
-                    if ($rule->className =='Process')
+                    if ($rule->className =='OmniFlow\\BPMN\\Process')
                     {
                         $rule->evaluate($process,null);
                     }
@@ -45,7 +45,7 @@ class ValidationRule
 
                     foreach(self::getRules() as $rule)
                     {
-                        $ruleClass=__NAMESPACE__.'\\'.$rule->className;
+                        $ruleClass=$rule->className;
 
         		if (($ruleClass==$className) || ($rule->className ===''))
                         {
@@ -105,7 +105,7 @@ class ValidationRule
 	{
 		ValidationRule::AddRule(
 				"Must have at least one startEvent"
-				,"Process", ""
+				,"OmniFlow\\BPMN\\Process", ""
 				,function ($proc,$item) {
 
 					$count=0;
@@ -123,7 +123,7 @@ class ValidationRule
 
 		ValidationRule::AddRule(
 				"Must have at least one endEvent"
-				,"Process", ""
+				,"OmniFlow\\BPMN\\Process", ""
 				,function ($proc,$item) {
 						
 					$count=0;
@@ -142,7 +142,7 @@ class ValidationRule
 
 		ValidationRule::AddRule(
 				"For Main Process, StartEvent can not have inflows"
-				,"Event", "startEvent"
+				,"OmniFlow\\BPMN\\Event", "startEvent"
 				,function ($proc,$item,$rule) {
                     
                         		$count=count($item->inflows);
@@ -156,7 +156,7 @@ class ValidationRule
 
 		ValidationRule::AddRule(
 				"For Main Process, EndEvent can not have outflows"
-				,"Event", "endEvent"
+				,"OmniFlow\\BPMN\\Event", "endEvent"
 				,function ($proc,$item) {
 					$count=0;
 					if (count($item->outflows)>0)
@@ -169,7 +169,7 @@ class ValidationRule
 		//
 		ValidationRule::AddRule(
 				"sequenceFlow that follow an XOR, OR gateway need to have a default or condition"
- 				,"Flow", "sequenceFlow"
+ 				,"OmniFlow\\BPMN\\Flow", "sequenceFlow"
 				,function (Process $proc,$item,$rule) {
 				$from=$item->fromNode;
 				$source=$proc->getItemById($from->id);

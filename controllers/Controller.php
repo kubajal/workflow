@@ -5,7 +5,7 @@ namespace OmniFlow;
 class Controller
 {
 	
-public function header($menus=true,$modeler=false)
+public function headerDelete($menus=true,$modeler=false)
 {
 	
 /*	header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -41,7 +41,11 @@ public function DisplayErrors()
 }
 public function Action($req=null)
 {
+    session_start();
+    
     $user=  Context::getUser();
+    
+    
  /*   if (!$user->isLoggedIn())
     {
         $this->login();

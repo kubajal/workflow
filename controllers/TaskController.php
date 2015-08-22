@@ -17,7 +17,7 @@ class TaskController extends Controller{
 
 function Action_list($req)
 {
-        $rows=DB::listTasks();
+        $rows=OmniModel::getInstance()->listTasks();
 
         $v=new TaskView();
         $v->header();
@@ -44,13 +44,13 @@ function Action_saveForm($req)
 }
 function Action_execute($req)
 {
-	$postForm=false;
+    	$postForm=false;
 	if (isset($req['FormProcessed']))
         {
                 $postForm=true;
         }
 		
-	$this->header();
+	Views::header();
 	$caseId=$req["caseId"];
 	$id=$req["id"];
     
@@ -59,8 +59,20 @@ function Action_execute($req)
 	$imageFile = str_replace(".bpmn", ".svg",$case->processFullName);
 	
 	$item = $case->getItem($id);
+        
+                
 	$taskId = $item->processNodeId;
 	$task = $proc->getItemById($taskId);
+
+        
+        
+        // Todo: Move all this logic to ProcessItem->Run
+        
+        $task->Run($item);
+        
+        /*
+        $item->UserTake();
+    
 	$actionView=$item->getActionView($postForm);
                 
                 Context::Log(INFO,"actionView:$actionView");
@@ -68,6 +80,7 @@ function Action_execute($req)
 		if ($actionView===true)
 			return;	
                     ActionManager::defaultForm($item);
-	
+        */
+        Views::endPage();            
 	
 }}

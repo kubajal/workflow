@@ -85,12 +85,16 @@ class ProcessItem extends OmniFlow\WFObject
 	public function Complete(WFCase\WFCaseItem $caseItem,$values="",$input="",ProcessItem $from)
 	{
 		$this->Finish($caseItem,$input,$from);
-		$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Completed,$values);	
+		$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Completed,$values,$from);
 	}
 	
 	
-	public function setStatus(WFCase\WFCaseItem $caseItem,$newStatus,$values="")
-	{
+	public function setStatus(WFCase\WFCaseItem $caseItem,$newStatus,$values="",$from=null)
+	{        
+
+            if ($newStatus==\OmniFlow\enum\StatusTypes::Completed)
+                WFCase\Assignment::TaskComplete($caseItem);
+            
 		OmniFlow\Context::Log(INFO, "setStatus: $this->id from $caseItem->status to $newStatus");
                 if (($caseItem->status==\OmniFlow\enum\StatusTypes::Completed) ||($caseItem->status==\OmniFlow\enum\StatusTypes::Terminated))
                 {
@@ -128,7 +132,8 @@ class ProcessItem extends OmniFlow\WFObject
                             
                         }
 		}
-
+                $itemStatus= new WFCase\WFCaseItemStatus($caseItem,$newStatus,$from);
+                $itemStatus->insert();
 		$caseItem->Update($newStatus);
 	}
 	function Trace()
@@ -200,7 +205,17 @@ class ProcessItem extends OmniFlow\WFObject
                 }
 		return;
 	}
-        
+        public function checkAccessRules($caseItem)
+        {
+            $ret=WFCase\Assignment::CanPerform($this, $caseItem);
+            if (!$ret)
+            {
+               throw new \Exception("You are not authorized to perform this function");
+                
+            }
+            
+            return true;
+        }
        	/*
 	 * 	this is called internally to invoke a outstanding task like a 'Receive Task'
 	 * 	pre-conditions:	task is already started
@@ -208,11 +223,17 @@ class ProcessItem extends OmniFlow\WFObject
 	 */
 	public function Invoke(WFCase\WFCaseItem $caseItem,$values="",$input="",$from=null)
 	{
+            
                 $fromLabel="";
                 if ($from!=null)
                     $fromLabel=$from->label;
 
 		OmniFlow\Context::Log(LOG,"ProcessItem Executing-Run: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
+                
+                // check Access Rules and assign Role if required
+
+                if ($this->NeedToWait($caseItem,$value,$input,$from))
+                    return false;
                 
 		if (!$this->Run($caseItem,$input,$from))
 		{
@@ -236,11 +257,15 @@ class ProcessItem extends OmniFlow\WFObject
 		$this->Notify(OmniFlow\enum\NotificationTypes::NodeCompleted);
 		OmniFlow\Context::Log(LOG,"ProcessIterm Executing-setting status to complete: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
                 
-		$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Completed);
+		$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Completed,$values,$from);
                 }
 
 		return $caseItem;
 	}
+	function NeedToWait(WFCase\WFCaseItem $caseItem,$input,$from)
+        {
+            return false;
+        }
 	/*
          *  Called to Execute a ProcessItem from begining to End
          * 
@@ -250,7 +275,6 @@ class ProcessItem extends OmniFlow\WFObject
          *                  4) Run
          *                  5) Finish
          */
-
 	public function Execute(WFCase\WFCase $case,$input,$from)
 	{
 		
@@ -270,8 +294,11 @@ class ProcessItem extends OmniFlow\WFObject
 		else 
 		{
 			$this->Notify(OmniFlow\enum\NotificationTypes::NodeStarted);
-			$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Started);
+			$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Started,null,$from);
 		}
+
+                $this->Assign($caseItem);
+                
                 if ($from==null)
                     $this->Invoke($caseItem,"",$input);
                 else
@@ -302,9 +329,18 @@ class ProcessItem extends OmniFlow\WFObject
 	}
 	public function Finish(WFCase\WFCaseItem $caseItem,$input,$from)
 	{
-	
+                WFCase\Assignment::TaskComplete($caseItem);
 		return true;
 	}
+        /*
+         * Assign
+         * Create Assignments based on AccessRules 
+         * 
+         */
+        public function Assign(WFCase\WFCaseItem $caseItem)
+        {
+            return AccessRule::AssignTask($this,$caseItem);
+        }
 
         public function __toArray()
         {

@@ -105,7 +105,7 @@ class Node extends ProcessItem
 	function Run(WFCase\WFCaseItem $caseItem,$input,$from)
 	{
  		OmniFlow\Context::Log(LOG,"Run Node: type: $this->type - $this->label - $this->id");
-                var_dump($this);
+
 		if ($this->actionScript!="")
                 {
                     $ret=eval ($this->actionScript);

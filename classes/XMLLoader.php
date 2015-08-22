@@ -18,7 +18,7 @@ class XMLLoader
 {
     var $proc;
     var $xml;
-    function LoadFile($fileName)
+    function LoadFile($fileName,$loadExtensions=true)
     {
 
             $config=new Config();
@@ -64,8 +64,11 @@ class XMLLoader
             }
 
             $this->loadShapes();
-            $ext=new ProcessExtensions();
-            $ext->loadExtensions(str_replace('.bpmn', '.xml',$path),$this->proc);
+            
+            if ($loadExtensions) {
+                $ext=new ProcessExtensions();
+                $ext->loadExtensions(str_replace('.bpmn', '.xml',$path),$this->proc);
+            }
 
             $this->proc->Init();
 

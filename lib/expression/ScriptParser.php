@@ -329,7 +329,7 @@ function debug($msg)
 
       $this->processNode(0,$this->rootNode,function ($level,$node)
       {
-          $this->debug( '<br />'.$level);
+/*          $this->debug( '<br />'.$level);
           for($i=0;$i<$level;$i++)
           {
               $this->debug( '.');
@@ -339,7 +339,7 @@ function debug($msg)
               $this->debug( 'token:'.$node->__toString());
           }
           else
-              $this->debug( 'node:'.$node->type);
+              $this->debug( 'node:'.$node->type); */
       });
       
     return $this->rootNode;

@@ -32,7 +32,7 @@ class EventEngine
  	public static function Check($duration=1)
  	{
  		Context::Log(LOG,'Checking Timers');
- 		$timers=OmniModel::getTimers($duration);
+ 		$timers=OmniModel::getInstance()->getTimers($duration);
  		
  		Context::Log(INFO,'EventManger::Check'.var_export($timers,true));
  			
@@ -65,7 +65,7 @@ class EventEngine
   	public static function HandleMessage($messageName,$data)
  	{
             Context::Debug("EventEngine:Handle Message $messageName".var_export($data,true));
-            $results=OmniModel::getMessageHandler($messageName);
+            $results=OmniModel::getInstance()->getMessageHandler($messageName);
             
             foreach($results as $result)
             {

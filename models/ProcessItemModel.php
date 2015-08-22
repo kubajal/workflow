@@ -10,24 +10,29 @@ namespace OmniFlow;
  */
 class ProcessItemModel extends OmniModel
 {
-    public static function getTable()
+        public static function getInstance()
+        {
+            return new ProcessItemModel();
+        }    
+    public function getTable()
     {
-        return self::getPrefix()."processItem";
+        return $this->db->getPrefix()."wf_processItem";
     }
     
-    public static function getMessageItem($messageName)
+    public function getMessageItem($messageName)
     {
-       $table=self::getTable();
-       $pTable=ProcessModel::getTable();
-       return self::select("Select p.name,i.processNodeId,i.type,i.messageKeys
+       $table=$this->getTable();
+       $pTable=ProcessModel::getInstance()->getTable();
+
+       return $this->db->select("Select p.name,i.processNodeId,i.type,i.messageKeys
                 from $table i
                 join $pTable p on p.id=i.processId 
                 where message='.$messageName'");        
     }
-    public static function getTableDDL()
+    public function getTableDDL()
     {
         $table=array();
-        $table['name']=self::getTable();
+        $table['name']=$this->getTable();
 	$table['sql']="		
 		 (
 				`id` int(11) NOT NULL AUTO_INCREMENT,

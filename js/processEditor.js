@@ -1,8 +1,14 @@
-jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
-  alert("Error requesting page " + settings.url + thrownError  +request +response);
+ jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
+  alert("Error requesting data " + settings.url + thrownError  +request +"Response:"+response);
 waiting("");
-});
+}); 
 
+jQuery( window ).resize(function() {
+    
+    if (typeof main_layout !== 'undefined') {
+       main_layout.setSizes();
+    }
+});
 
 /*
 	BuildPage and its parts
@@ -96,14 +102,17 @@ return;
 				'svg': OmniSVG
                             };
 
-alert(url);
+//                alert(url);
 			jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
-				alert("Error requesting page " + settings.url + thrownError  +request +response);
+                            
+				alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
+                                waiting("");
+                                
 			});
 							
             jQuery.post(url, data, function(response) {
         	waiting("");
-				alert(response);
+//				alert(response);
                 }); 	 	
 
 	}
@@ -113,7 +122,7 @@ alert(url);
         
         function newModel()
         {
-            alert("new");
+//            alert("new");
 			formData = [
 				{type: "settings", position: "label-left", labelWidth: 100, inputWidth: 120},
 				{type: "block", inputWidth: "auto", offsetTop: 12, list: [
@@ -130,7 +139,7 @@ alert(url);
                     myForm.attachEvent("onButtonClick", function(name)
                         {
                         var value = myForm.getItemValue("modelName");
-                        alert(value);
+//                        alert(value);
                         dhxWins.unload();
                         invokeAction('modeler.new','&file='+value+'.bpmn');
                         });                    
@@ -165,12 +174,8 @@ alert(url);
 	 		}
 		return url;
 	}
-	function saveJson()
-	{
-       	waiting("Saving..");
-            
-            displayStatus("Saving Data.");
-            var url=getAjaxUrl();
+        function buildJsonForSave()
+        {
             var saveData=new Object();
             var items=procJson['items'];
             var mods=Array();
@@ -189,6 +194,17 @@ alert(url);
             saveData["subprocesses"]=procJson['subprocesses'];
 
             var jsonStr = JSON.stringify(saveData);
+            
+            return jsonStr;
+            
+        }
+	function saveJson()
+	{
+       	waiting("Saving..");
+            
+            displayStatus("Saving Data.");
+            var url=getAjaxUrl();
+            var jsonStr = buildJsonForSave();
 /*            alert(jsonStr);
             
             jsonStr.replace(/\n/g,"~~n");
@@ -245,12 +261,16 @@ alert(url);
 		var el=jQuery('#targetBlock');
 	 	el.html("loading item details ...");
 		var url=getAjaxUrl();
+                
+                
+                var jsonStr = buildJsonForSave();
 
 	 	var file=getParameterByName('file');
 	 	var data = {
 	 				'action': 'omni_ajax_call',
 	 				'command': 'process.validate',
-	 				'file': file
+                                        'file': file ,
+                                        'json':  jsonStr
 	 			};
 //	 	alert(url+"data :"+data.action+" "+data.command+" "+data.file);
 		jQuery.post(url, data, function(response) {
@@ -282,7 +302,7 @@ alert(url);
 			dhtmlx.image_path=dxImgPath;
 
 	main_layout = new dhtmlXLayoutObject('MainLayout', '2E');
-
+        main_layout.setAutoSize("a", "a;b");
 	var diagram = main_layout.cells('a');
 	diagram.setText('Diagram');
 	diagram.setCollapsedText('Diagram');
@@ -847,7 +867,8 @@ function BuildDataModel(tabbar)
 	});
 }
 
-var arActorCombo;
+var arActorCombo1;
+var arActorCombo2;
 var nrActorCombo;
 
 function populateActorCombo()
@@ -857,13 +878,15 @@ function populateActorCombo()
 }
 function populateArActorCombo()
 {
-    populateCombo(arActorCombo,procJson['actors'],'actor','actor');
+    populateCombo(arActorCombo1,procJson['actors'],'actor','actor');
+    populateCombo(arActorCombo2,procJson['actors'],'actor','actor');
 
+return;
     var data=procJson['accessRules'];
     for(var i=0;i<data.length;i++)
 	{
             var ar=data[i];
-            var val=ar['asRole'];
+            var val=ar['asActor'];
             if ((val !== '') && (val !==null))
             {
                 arActorCombo.put(val,val);
@@ -882,22 +905,23 @@ function BuildAccessRules(tabbar)
 	gridAccessRules = cell_9.attachGrid();
 	gridAccessRules.setIconsPath(dxImgPath);
 	
-	gridAccessRules.setHeader(["User Goup","Privilege","On","As Role","Condition"]);
-	gridAccessRules.setColTypes("co,co,co,ed,txt");
-	gridAccessRules.setColumnIds("userGroup,privilege,nodeId,asRole,condition");
+	gridAccessRules.setHeader(["User Goup","Work Scope Type","WorkScope Variable","Actor","Privilege","On","As Actor","Condition"]);
+	gridAccessRules.setColTypes("co,co,co,co,co,co,ed,txt");
+	gridAccessRules.setColumnIds("userGroup,workScopeType,workScopeVariable,actor,privilege,nodeId,asActor,condition");
 	
-	gridAccessRules.setInitWidths("100,80,150,80,300");
-	gridAccessRules.setColAlign("center,center,left,center");
+	gridAccessRules.setInitWidths("100,80,80,40,40,150,80,300");
+	gridAccessRules.setColAlign("center,center,center,center,left,center");
 
-        arActorCombo= gridAccessRules.getCombo(0);
+        arActorCombo1= gridAccessRules.getCombo(3);
+        arActorCombo2= gridAccessRules.getCombo(6);
         
-        combo = gridAccessRules.getCombo(1);
+        combo = gridAccessRules.getCombo(4);
             combo.put("V","View");
             combo.put("S","Start");
             combo.put("P","Perform");
             combo.put("A","Assign"); 
         
-        combo = gridAccessRules.getCombo(2);
+        combo = gridAccessRules.getCombo(5);
             combo.put("__Process__","Process");
 
 	gridAccessRules.init();
@@ -910,9 +934,9 @@ function BuildAccessRules(tabbar)
 			{
 			nValue=gridItemData.cells(rId,cInd).isChecked();
 			}
-                if (cId=='asRole')
+                if (cId=='asActor')
                 {
-                    populateArActorCombo();
+//                    populateArActorCombo();
                 }
 		debug("onChange! "+stage+" row"+rId+" cell:"+cInd+":"+cId+ " value:" + nValue+" from "+oValue+" type:"+gridItemData.getColType(cInd));
 		
@@ -1254,13 +1278,13 @@ function displayData()
         populateActorCombo();
 
         
-        var combo=gridAccessRules.getCombo(2);
+        var combo=gridAccessRules.getCombo(5);
         var procItems=procJson["items"];
         
         for(var i=0;i<procItems.length;i++)
         {
             var item=procItems[i];
-            if (item['type']=='userTask')
+            if ((item['type']=='userTask') || (item['type']=='startEvent'))
             {
             combo.put(item['id'],item['name']);                
             }

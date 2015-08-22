@@ -52,12 +52,29 @@ font: 100% "Trebuchet MS", sans-serif;
 {
 	
 }
-.submit_iframe {
-			position: relative;
-			width: 450px;
-			height: 150px;
-			border: 1px solid #a4bed4;
-			margin-top: 5px;
-			font-family: monospace;
-			font-size: 12px;
+#menu-bar {
+    float:left;width:100%;
+    background-color: rgb(238, 220, 239); 
 }
+#omni_menus {
+    float:left;
+    background-color: rgb(238, 220, 239); 
+}
+#omni_menus_local {
+    
+float:right;
+background-color: rgb(238, 220, 239); 
+}
+
+.maxScreen
+{
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    padding: 40px;
+    width:100%;
+    display:block;
+    overflow-y: scroll;
+    height: 100%;
+}
+.hide { display: none;}
