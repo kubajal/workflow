@@ -33,7 +33,10 @@
 	//		alert(response);
 			caseJson=response;
 //			displayCase(caseJson);
-			}); 	 
+			}).error(function() {
+                            alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
+                            waiting("");
+                        }); 
 	}
 //	------------------------------- Build Page
 	function BuildCasePage()

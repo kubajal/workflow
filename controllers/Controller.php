@@ -41,7 +41,6 @@ public function DisplayErrors()
 }
 public function Action($req=null)
 {
-    session_start();
     
     $user=  Context::getUser();
     

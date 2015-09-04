@@ -38,6 +38,11 @@ class DesignerController extends Controller{
         $v->display();
         $v->endPage();
     }
+    public function Action_debugScript($req)
+    {
+         $v=new ExpressionDebugSymfonyView();
+        $v->execute();
+    }
     public function Action_validate($req)
     {
 	$file=$req["file"];

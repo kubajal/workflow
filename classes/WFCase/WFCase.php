@@ -55,6 +55,17 @@ class WFCase extends \OmniFlow\WFObject
 			}
 	
 		}
+                public static function SampleCaseForProcess($proc)
+                {
+                        $case=new WFCase();
+                        $case->processName = $proc->processName;
+                        $case->processFullName = $proc->processName;
+                        $case->values=\OmniFlow\DataManager::createDataObject($proc);
+                        $case->proc=$proc;        
+
+                        return $case;
+
+                }                
 		static function NewCase($proc)
 		{
 			$case=new WFCase();
@@ -66,6 +77,16 @@ class WFCase extends \OmniFlow\WFObject
 			$db->insert($case);
 			return $case;
 		}
+                public function Update()
+                {
+                    $this->proc->Notify(OmniFlow\enum\NotificationTypes::CaseSaving,$this->case);
+		
+                    $db=new OmniFlow\CaseModel();
+                    $db->update($this);
+		
+                    $this->proc->Notify(OmniFlow\enum\NotificationTypes::CaseSaved,$this->case);
+
+                }
 		static function LoadCase($caseId)
 		{
 			

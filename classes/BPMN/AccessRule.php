@@ -58,17 +58,46 @@ class AccessRule extends \OmniFlow\WFObject
         }
         return false;
  }
+ public static function Validate(\OmniFlow\BPMN\ProcessItem $processItem)
+ {
+        foreach($processItem->proc->accessRules as $rule) {
+            if (($rule->nodeId == $processItem->id) || ($rule->nodeId == '__Process__'))
+                {
+                return true;
+            }
+        }
+        
+        \OmniFlow\Context::Log(\OmniFlow\VALIDATION_ERROR, "No Access Rules defined for {$processItem->label}");        
+        return false;
+     
+ }
+
  /*
   * Calculate Assignment for a task
   */
  public static function AssignTask(\OmniFlow\BPMN\ProcessItem $processItem,\OmniFlow\WFCase\WFCaseItem $caseItem)
  {
-     if ($processItem->isEvent()) // no need for start event
-         return true;
+//     if ($processItem->isEvent()) // no need for start event
+//         return true;
      
         foreach($processItem->proc->accessRules as $rule) {
-            if ($rule->nodeId == $processItem->id) {
-                $rule->CreateAssignment($caseItem);
+            if (($rule->nodeId == $processItem->id) || ($rule->nodeId == '__Process__'))
+                {
+
+                if ($rule->actor !=='') {  
+                    
+                    $users=  \OmniFlow\WFCase\Assignment::getUsersForActor($caseItem, $rule->actor);
+                    foreach($users as $user)
+                    {
+                        $rule->CreateAssignment($caseItem,$user);
+
+                    }
+
+                }
+                else {
+                    $rule->CreateAssignment($caseItem);
+     
+                }
             }
         }
         return true;
@@ -76,21 +105,10 @@ class AccessRule extends \OmniFlow\WFObject
  /*
   *     create a new Assignment record for this rule
   */
- public function CreateAssignment(\OmniFlow\WFCase\WFCaseItem $caseItem)
+ public function CreateAssignment(\OmniFlow\WFCase\WFCaseItem $caseItem,$userId=null)
  {
-     $a=new \OmniFlow\WFCase\Assignment();
+     $a=new \OmniFlow\WFCase\Assignment($caseItem);
      
-     $userId=null;
-     /*
-      * 1) if rule is based on specific Role , assign it to this Actor
-      * 2) If userGroup and workscope assign
-
-      */
-     
-     if ($this->actor !=='')
-     {  // TO DO: get user Id
-         
-     }
      
      $a->caseId=$caseItem->caseId;
      $a->caseItemId=$caseItem->id;

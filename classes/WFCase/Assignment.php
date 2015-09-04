@@ -56,11 +56,19 @@ Class Assignment extends \OmniFlow\WFObject
     var $privilege;    
     var $status='A';
     var $asActor;
- 
+
+ public function __construct(WFCaseItem $caseItem) {
+     $this->caseItemId=$caseItem->id;
+     $case=$caseItem->case;
+     $this->caseId=$case->caseId;
+     $case->assignments[]=$this;
+     
+ }
  /* Current User Takes the Assignment 
   * 
  *      New UserAssignment
   */
+    
  public static function UserTake(\OmniFlow\WFCase\WFCaseItem $caseItem)
  {
         $user=  \OmniFlow\Context::getuser();
@@ -145,6 +153,19 @@ Class Assignment extends \OmniFlow\WFObject
 /*
  *  check if rule is applied here 
  */
+
+public static function getUsersForActor(\OmniFlow\WFCase\WFCaseItem $caseItem,$actor)
+{
+        $users=Array();
+        $assignments=$caseItem->case->assignments;
+        foreach($assignments as $assignment) {
+            if (($actor===$assignment->asActor) && ($assignment->userId !==null))
+            {
+                $users[]=$assignment->userId;
+            }
+        }
+        return $users;
+}
 public function checkRule(\OmniFlow\WFCase\WFCaseItem $caseItem)
 {
     // if rule is based on an actor check it
@@ -152,15 +173,12 @@ public function checkRule(\OmniFlow\WFCase\WFCaseItem $caseItem)
     
     if ($this->actor!=='')
     {
-        // only the user with this role can perform this task
-        $assignments=$caseItem->case->assignments;
-        foreach($assignments as $assignment) {
-            if (($user->id === $assignment->userId) && ($this->actor===$assignment>asActor))
-            {
+        $users=self::getUsersForActor($caseItem, $this->actor);
+        
+        if (in_array($user->id, $users))
                 return true;
-            }
-        }
-        return false;
+        else
+                return false;
     }
     
     if ($user->id === $this->userId)
@@ -190,7 +208,7 @@ private static function updateAssignments($caseItem,$condition,$activate=true,$a
 }
 private static function newUserAssignments($caseItem,$userid,$asActor)
 {
-        $a=new Assignment();
+        $a=new Assignment($caseItem);
         $a->userId=$userid;
         $a->caseId=$caseItem->case->caseId;
         $a->caseItemId=$caseItem->id;

@@ -72,7 +72,7 @@ class DataManager
 	 */
 	public static function createDataObject($proc)
 	{
-                Context::Log(INFO, "case Object". print_r($proc->dataElements,true));
+//                Context::Log(INFO, "case Object". print_r($proc->dataElements,true));
 
 		$object=array(); // new \stdClass();
                 
@@ -81,7 +81,7 @@ class DataManager
                     $var = $de->name;
                     $object[$var]='';
 		}
-                Context::Log(INFO, "case Object".var_export($object,true));
+//                Context::Log(INFO, "case Object".var_export($object,true));
 		return $object;
 	}
 	

@@ -24,13 +24,15 @@ namespace Symfony\Component\ExpressionLanguage;
 class ParserNode
 {
     var $type;
+    var $value;
     var $parent;
     var $children=Array();
 
-    public function __construct($type,$parent)
+    public function __construct($type,$parent,$title='')
     {
         $this->type=$type;
         $this->parent=$parent;
+        $this->value=$title;
         if ($parent!==null)
             $parent->children[]=$this;
     }
@@ -100,6 +102,8 @@ function nextToken($justSearching=false)
     $this->pos++;
     $this->searchPos++;
     $token=$this->tokens[$this->searchPos];
+    
+     
     if ($token->type==Token::EOF_TYPE)
         return null;
     else
@@ -139,41 +143,66 @@ function doBlock($parent)
     while(($token=$this->nextToken())!=null)
     {
        $tag=$token->value;
+       
 
-       switch($tag)
-       {
-           case '}':
-               // end block
-               return $node;
-               break;
-           case 'if':
-                $statementNode=null;
-               $this->doIf($node);
-               break;
-           case 'template':
-                $statementNode=null;
-               $this->doTemplate($node);
-               break;
-           case '{':
-                $statementNode=null;
-               $this->doBlock($node);
-               break;
-/*           case '(':
-               if ($statementNode==null)
+       if (($token->type=='name') || ($token->type=='punctuation')) { 
+       
+            switch($tag)
+            {
+                case '}':
+                    // end block
+                    return $node;
+                    break;
+                case 'if':
+                     $statementNode=null;
+                    $this->doIf($node);
+                    break;
+                case 'continue':
+                    $node=new ParserNode('continue',$parent);
+                    break;
+                case 'break':
+                    $node=new ParserNode('break',$parent);
+                    break;
+                
+                case 'while':
+                     $statementNode=null;
+                    $this->doWhile($node);
+                    break;
+                case 'foreach':
+                     $statementNode=null;
+                    $this->doForEach($node);
+                    break;
+                case 'template':
+                     $statementNode=null;
+                    $this->doTemplate($node);
+                    break;
+                case '{':
+                     $statementNode=null;
+                    $this->doBlock($node);
+                    break;
+     /*           case '(':
+                    if ($statementNode==null)
+                         $statementNode=new ParserNode('statement',$node);    
+                    $this->doExpression($statementNode);
+                    break; */
+                case ';':
                     $statementNode=new ParserNode('statement',$node);    
-               $this->doExpression($statementNode);
-               break; */
-           case ';':
-               $statementNode=new ParserNode('statement',$node);    
-               break;
-           default :
-           {
-                if ($statementNode==null)
-                     $statementNode=new ParserNode('statement',$node);    
-                $this->doToken($statementNode);
-           }
+                    break;
+                default:
+                    if ($statementNode==null)
+                        $statementNode=new ParserNode('statement',$node);    
+                    $this->doToken($statementNode);
+                    break;
+            }
+       }
+       else {
+           
+        if ($statementNode==null)
+            $statementNode=new ParserNode('statement',$node);    
+        $this->doToken($statementNode);
+           
+       }
                
-        }
                
     }
     return $node;
@@ -196,22 +225,26 @@ function doExpression($parent)
     while(($token=$this->nextToken())!=null)
     {
        $tag=$token->value;
+       if (($token->type=='name') || ($token->type=='punctuation')) { 
+            switch($tag)
+            {
+                case ')':
+                    // end block
+                    return $node;
+                    break;
+                case '(':
+                    $this->doExpression($node);
+                    break;
+                default :
+                {
+                   $this->doToken($node);
+                }
 
-       switch($tag)
-       {
-           case ')':
-               // end block
-               return $node;
-               break;
-           case '(':
-               $this->doExpression($node);
-               break;
-           default :
-           {
-               $this->doToken($node);
-           }
-               
-        }
+             }
+       }
+       else
+           $this->doToken($node);
+           
                
     }
     return $node;
@@ -254,6 +287,65 @@ function doTemplate($parent)
     }
         
 }
+function doWhile($parent)
+{
+    
+    $node=new ParserNode('while',$parent);
+
+    if ($this->nextTokenIs(Token::PUNCTUATION_TYPE,'('))
+    {
+        $condit=new ParserNode('condition',$node,"condition of while");
+        $this->doExpression($condit);
+    }
+    if ($this->nextTokenIs(Token::PUNCTUATION_TYPE,'{'))
+    {
+        $do=new ParserNode('do',$node,"do while");
+        $this->doBlock($do);
+    }
+        
+}
+function doForEach($parent)
+{
+    
+    $node=new ParserNode('foreach',$parent);
+
+        if (!$this->nextTokenIs(Token::PUNCTUATION_TYPE,'('))
+            {
+
+            }
+
+        $token=$this->nextToken();
+         $collection=new ParserNode('collection',$node);
+         $collection->value=$token->value;
+
+        $token=$this->nextToken();  // as 
+           if ( ($token->type=='name') &&  ($token->value==='as'))
+           {
+           }
+         else {
+
+           }
+           
+        $token=$this->nextToken();
+         $var=new ParserNode('var',$node);
+         $var->value=$token->value;
+         
+           
+        if (!$this->nextTokenIs(Token::PUNCTUATION_TYPE,')'))
+            {
+
+            }
+
+
+
+        if ($this->nextTokenIs(Token::PUNCTUATION_TYPE,'{'))
+        {
+            $do=new ParserNode('do',$node,'foreach block');
+            $this->doBlock($do);
+        }
+
+}
+
 
 function doIf($parent)
 {
@@ -262,12 +354,12 @@ function doIf($parent)
 
     if ($this->nextTokenIs(Token::PUNCTUATION_TYPE,'('))
     {
-        $condit=new ParserNode('condition',$node);
+        $condit=new ParserNode('condition',$node,"if condition");
         $this->doExpression($condit);
     }
     if ($this->nextTokenIs(Token::PUNCTUATION_TYPE,'{'))
     {
-        $do=new ParserNode('do',$node);
+        $do=new ParserNode('do',$node," ifTrue block");
         $this->doBlock($do);
     }
         
@@ -280,12 +372,12 @@ function doIf($parent)
            case 'elseif':
                if ($this->nextTokenIs(Token::PUNCTUATION_TYPE,'('))
                 {
-                    $condit=new ParserNode('elseif',$node);
+                    $condit=new ParserNode('elseif',$node,"else if condition");
                     $this->doExpression($condit);
                 }
                if ($this->nextTokenIs(Token::PUNCTUATION_TYPE,'{'))
                 {
-                    $do=new ParserNode('block',$node);
+                    $do=new ParserNode('block',$node,"else if block");
                     $this->doBlock($do);
                 }
                 break;

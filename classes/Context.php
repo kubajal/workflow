@@ -22,14 +22,12 @@ const VALIDATION_ERROR="validationError";
 
 class Context extends WFObject
 {
-	var $env; 		/*D:Development,T:Text,P:Production */
 	var $user;
         var $fromWordPress;
         var $feedback=array();
         var $errors=array();
         var $dataToSave=array();
         var $omniBaseURL="";
-        var $recording=false;
         
     static $validitionErrorsCount;        
     
@@ -72,7 +70,22 @@ class Context extends WFObject
         self::getInstance()->dataToSave[]=$arr;
         
     }
+    public static function getSession($variable)
+    {
+           session_start();
+           if (isset($_SESSION[$variable]))
+               return $_SESSION[$variable];
+           else {
+               return null;
+           }
 
+    }
+    public static function setSession($variable,$val)
+    {
+           session_start();
+           $_SESSION[$variable]=$val;
+
+    }
     public static function getuser()
     {
         if (self::getInstance()->user==null)
@@ -117,7 +130,10 @@ class Context extends WFObject
                     'default' => array(
                         'class' => 'LoggerAppenderDailyFile',
                         'layout' => array(
-                            'class' => 'LoggerLayoutSimple',
+                            'class' => 'LoggerLayoutPattern',
+                            'params' => array(
+                                'conversionPattern' => '%date{H:i:s,u} %-5level %msg%n'
+                                )                           
                         ),
                         'params' => array(
                             'datePattern' => 'Y-m-d',

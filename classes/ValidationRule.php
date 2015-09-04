@@ -141,20 +141,6 @@ class ValidationRule
 
 
 		ValidationRule::AddRule(
-				"For Main Process, StartEvent can not have inflows"
-				,"OmniFlow\\BPMN\\Event", "startEvent"
-				,function ($proc,$item,$rule) {
-                    
-                        		$count=count($item->inflows);
-					if ($count>0)
-						return false;
-					else
-						return true;
-				}
-		,"");
-			
-
-		ValidationRule::AddRule(
 				"For Main Process, EndEvent can not have outflows"
 				,"OmniFlow\\BPMN\\Event", "endEvent"
 				,function ($proc,$item) {

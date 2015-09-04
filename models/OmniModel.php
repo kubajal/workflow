@@ -205,8 +205,18 @@ class OmniModel
 	}
 	public function listTasks($status="")
 	{
-		
-              
+            $tblA=   AssignmentModel::getInstance()->getTable();
+            $tblCi=  CaseItemModel::getInstance()->getTable();
+            $tblU = $this->db->getPrefix()."users";
+            
+            $sql="  SELECT u.user_nicename as userName , a.userGroup , ci.label,a.caseId,ci.id, ci.started 
+                    FROM $tblA a
+                    join $tblCi ci on ci.id=a.caseItemId
+                    left outer join $tblU u on u.ID = a.userId
+                    where ci.status not in ('Complete','Terminated')
+                    and a.status not in ('D')
+                    order by a.userId,a.userGroup";
+              /*
 		$type="type like '%Task'";
 		
 		$table=  CaseItemModel::getInstance()->getTable();
@@ -215,7 +225,7 @@ class OmniModel
 		if ($type!="")
 			$status = $status." and ".$type;
 		$sql="select * from $table where $status";
-
+*/
 		return $this->db->select($sql);
 		
 	}

@@ -32,24 +32,25 @@ class ProcessModel extends OmniModel
 		$table1=$this->getTable();
 		
 		$sql="delete from $table where processId 
-				in (select processId from $table1 where processname ='$processName')";
+				= (select processId from $table1 "
+                        . "where processname ='$processName')";
 				
 			
 		$result = $this->db->query($sql);
 		
 		Context::Log(INFO,'db:unregisterProcess '.$sql.' res:'.$result);
-		if ($result==false)
+		if ($result===false)
 		{
-			Context::Log(ERROR , $this->db->error().$sql);
+			Context::Log(ERROR ,"SQL Error".$this->db->error().$sql);
 		}
 		$sql="delete from $table1 where processname ='$processName'";
 			
 		$result = $this->db->query($sql);
 		
 		Context::Log(INFO,'db:unregisterProcess 2 '.$sql.' res:'.$result);
-				if ($result==false)
+                if ($result===false)
 		{
-			Context::Log(ERROR , $this->db->error().$sql);
+			Context::Log(ERROR ,"SQL Error".$this->db->error().$sql);
 		}
 		
 		
@@ -69,7 +70,7 @@ class ProcessModel extends OmniModel
 		
 		$id=$this->db->insertRow($this->getTable(),$data);
 		
-		
+		$procItemModel=new ProcessItemModel();
 		foreach($process->items as $item)
 		{
 			if (($item->type=='startEvent') && ($item->getSubProcess()->isExecutable() ))
@@ -92,7 +93,8 @@ class ProcessModel extends OmniModel
 				'message'=> $item->message
 						);
 		
-				self::insertRow(ProcessItemModel::getInstance()->getTable(),$data);
+                		$id=$this->db->insertRow($procItemModel->getTable(),$data);
+                                
 			}	
 		}
                 $this->db->commit();
@@ -107,7 +109,7 @@ class ProcessModel extends OmniModel
 		$sql="select 'Process Item' as source ,p.processName as processName, pi.id as id,pi.processNodeId,null as caseId,pi.type,subType,label,timer,timerDue,message,signalName "
                         . " from $piTable pi
                             join $pTable  p on p.processId=pi.processId
-                            where  subType=''";
+                            where  IfNull(subType,'')=''";
                 
 		return $this->db->select($sql);
     }
@@ -125,7 +127,8 @@ class ProcessModel extends OmniModel
 				`processFullName` varchar(450) NOT NULL,
 				`created` datetime DEFAULT NULL,
 				`updated` datetime DEFAULT NULL,
-				PRIMARY KEY (`processId`)
+				PRIMARY KEY (`processId`),
+				KEY `idx_wf_process_name` (`processName`)                                
 		) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8;";
         return $table;
 

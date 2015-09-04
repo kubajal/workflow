@@ -41,7 +41,7 @@ class DB
         
 	public function getPrefix()
 	{
-		return "wf_";
+		return "wp_";
 	}        
         private function hasError($query)
         {

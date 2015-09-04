@@ -41,8 +41,8 @@ class EventEngine
 // 			var_dump($timer);
  			$caseId=$timer['caseId'];
  			$id=$timer['id'];
- 			
- 			$case=TaskSvc::SetStatus($caseId,$id,\OmniFlow\enum\StatusTypes::Completed);
+ 			$item=CaseSvc::LoadCaseItem($caseId, $id);
+ 			$case=TaskSvc::Complete($item);
  		}
  		
  	}
@@ -89,7 +89,8 @@ class EventEngine
                     $id=$result['id'];
                     Context::Debug("EventEngine:Handle Message $messageName invoking a current case $caseId - $id");
                     Context::Debug("result:".print_r($result,true));
-                    TaskSvc::Invoke($caseId, $id,$data);
+                    $item=CaseSvc::LoadCaseItem($caseId, $id);
+                    TaskSvc::Complete($item,$data);
                 }
             }
  	}
@@ -105,7 +106,7 @@ class EventEngine
  			$arr=explode(" ",$timer);
  			if (count($arr)<2)
  			{
- 				$item->proc->Error($item,"Invalid Timer format for duration, must be at least 3 fields of minute hour day year - $timer ");
+                             Context::Error("Invalid Timer format for duration, must be at least 3 fields of minute hour day year - $timer ");
                                 return null;
  			}
  			$i=0;
@@ -120,7 +121,7 @@ class EventEngine
  			{
  				if (!ctype_digit($entry))
  				{
- 					$item->proc->Error($item,"Invalid entry # $i - must be an integer '$entry'- $item->timer");
+ 					Context::Error("Invalid entry # $i - must be an integer '$entry'- $item->timer");
                                         return null;
  				}
  				Context::Log(INFO, "getDueDate entry $entry - i: $i");
@@ -169,7 +170,7 @@ class EventEngine
  		}
  		else
  		{
- 			require __DIR__.'\..\lib\cron\CronExpression.php';
+ 			require __DIR__.'\..\..\lib\cron\CronExpression.php';
  				
  	
  			//			date_default_timezone_set('America/Toronto');

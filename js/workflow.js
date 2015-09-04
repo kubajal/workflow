@@ -102,7 +102,6 @@ function processItemClicked(evt,id)
  		}
 	jQuery.post(url, data, function(response) {
 	 	el.html(response);
-
 		}); 	 	
  	
 /* 	jQuery.post({

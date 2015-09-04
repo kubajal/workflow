@@ -62,8 +62,11 @@ class ModelerController extends Controller{
     {
         $v=new Views();
         $v->header();
+        
+       $link=Helper::getUrl(array('action'=>'modeler.upload')); 
+        
  ?>            
-    <form enctype="multipart/form-data" action="index.php?action=modeler.upload" method="POST">
+    <form enctype="multipart/form-data" action="<?php echo $link;?>" method="POST">
     <input type="hidden" name="MAX_FILE_SIZE" value="100000" />
     Choose a BPMN file to upload:  <input name="bpmnfile" type="file" /><br />
     <input type="submit" value="Upload Files" />

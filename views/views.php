@@ -201,39 +201,7 @@ public function ListProcesses($list)
 	echo "</table></div>";
 }
 */
-function listTasks($rows)
-{
 
-	echo "<div>
-			<table>";
-	$i=0;
-	for ($i=0;$i<count($rows);$i++)
-	{
-
-		$row=$rows[$i];
-
-		$id=$row['id'];
-		$pid=$row['processNodeId'];
-		$cid=$row['caseId'];
-		$type=$row['type'];
-		$label=$row['label'];
-		$actor=$row['actor'];
-
-		$linkCase=Helper::getUrl(array('action'=>'show','caseId'=>$cid));
-
-		$link=Helper::getUrl(array('action'=>'executeActivity','caseId'=>$cid,'id'=>$id));
-
-		$line= "<tr>
-		<td><a href='$linkCase'>$cid</a></td>
-		<td>$type</td>
-		<td><a href='$link'>$label</a></td><td>$actor</td>
-		</tr>";
-		echo $line;
-
-
-	}
-	echo "</table></div>";
-}
 function listMessages($rows)
 {
 
@@ -525,25 +493,30 @@ public function ShowHelp()
     
     }
     
-   function displayGrid($gridname,$data,$cols,$titles,$types,$widths=null)
+   function displayGrid($gridname,$data,$cols,$titles,$types,$widths=null,$gridStyle=null)
     {
            $json=json_encode($data);
+           
+           if ($gridStyle===null)
+           {
+               $gridStyle="width:800px;min-height:400px;height=60%";
+           }
+
            $headers=join(',',$titles);
            $colIds=join(',',$cols);
            $colTypes=join(',',$types);
            if ($widths!=null)
            $widthList=join(',',$widths);
+           $gridnamejson=$gridname.'json';
            
    echo 
         "
-        <div id='$gridname' style='width:800px;min-height:400px;height=60%'>
+        <div id='$gridname' style='$gridStyle'>
         </div>
 <script>
-       json=$json;
-//		main_layout = new dhtmlXLayoutObject('$gridname', '2U');
-//		var diagram = main_layout.cells('a');
+       $gridnamejson=$json;
+
 	    var $gridname = new dhtmlXGridObject('$gridname');
-//		var $gridname = diagram.attachGrid();
         $gridname.setIconsPath(dxImgPath);
         
 	$gridname.setHeader('$headers');
@@ -560,7 +533,7 @@ public function ShowHelp()
 
 	jQuery( document ).ready(function() {
 
-           var firstRow=populateGrid($gridname,json);
+           var firstRow=populateGrid($gridname,$gridnamejson);
             
 	});		
 </script>

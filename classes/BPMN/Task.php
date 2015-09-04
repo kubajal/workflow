@@ -55,7 +55,7 @@ class Task extends Node
 	}
 	function NeedToWait(WFCase\WFCaseItem $caseItem,$input,$from)
         {
- 		OmniFlow\Context::Log(LOG,"Run Node: class:Task type: $this->type - $this->label - $this->id $this->actionScript");
+ 		OmniFlow\Context::Log(LOG,"Checking wait for Node: class:Task type: $this->type - $this->label - $this->id $this->actionScript");
             
 		if ($this->type=="receiveTask")
 		{
@@ -71,33 +71,28 @@ class Task extends Node
 		{
                         return true; // Don't continue
 		}
-                return true;
+                return false;
         }
-        
+        public function requiresAccessRules()
+        {
+            if (($this->type=="userTask")||($this->type=="task"))
+            {
+                if ($this->isExecutable())
+                    return true;
+            }
+            return false;
+        }
 	function Run(WFCase\WFCaseItem $caseItem,$input,$from)
 	{
  		OmniFlow\Context::Log(LOG,"Run Node: class:Task type: $this->type - $this->label - $this->id $this->actionScript");
                 
-                $this->checkAccessRules($caseItem);
-                $caseItem->UserTake();
 
-                /* moved to CheckWait ---
-		if ($this->type=="receiveTask")
+    		if ($this->requiresAccessRules())
 		{
-                    if ($from===null)
-                            return true;
-                    
-                    if ($from->type=='messageFlow')
-                            return true;
-                    else
-                        return false;
-		}
-                 * 
-                 */
-		if (($this->type=="userTask")||($this->type=="task"))
-		{
+                    $this->checkAccessRules($caseItem);
+                    $caseItem->UserTake();
     
-                	$actionView=$caseItem->getActionView($postForm);
+                 	$actionView=$caseItem->getActionView($postForm);
                 
                         \OmniFlow\Context::Log(INFO,"actionView:$actionView");
 

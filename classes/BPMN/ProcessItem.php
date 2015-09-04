@@ -88,7 +88,41 @@ class ProcessItem extends OmniFlow\WFObject
 		$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Completed,$values,$from);
 	}
 	
-	
+	public function SetValues(WFCase\WFCaseItem $caseItem,$values,$updateCase=true)
+        {
+                OmniFlow\Context::Log(INFO,print_r($values,true));
+
+                $case = $caseItem->case;
+
+                foreach($this->dataElements as $variable)
+                {
+                    $de=$variable->getDataElement($this->proc);
+                    $varName=$variable->field;
+                    if ($varName=='')
+                        $varName=$de->name;
+
+                    if (isset($values[$varName]))
+                    {
+                        $value=$values[$varName];
+
+                        $case->SetValue($de->name,$value);
+                    }
+                    else    // null out the values that are not in input to fix for checkboxes
+                    {
+                        $case->SetValue($de->name,"");
+
+                    }
+
+                }
+                if ($updateCase)
+        		$caseItem->case->Update();
+            
+        }
+        public function isExecutable()
+        {
+            return $this->getSubProcess()->isExecutable();
+        }
+            
 	public function setStatus(WFCase\WFCaseItem $caseItem,$newStatus,$values="",$from=null)
 	{        
 
@@ -102,35 +136,10 @@ class ProcessItem extends OmniFlow\WFObject
                 }
 		if (is_string($values))
 		{
-//			if ($values!="")
-//				$this->result=$values;
 		}
 		else if (is_array($values))
 		{
-			OmniFlow\Context::Log(INFO,print_r($values,true));
-			
-			$case = $caseItem->case;
-
-                        foreach($this->dataElements as $variable)
-                        {
-                            $de=$variable->getDataElement($this->proc);
-                            $varName=$variable->field;
-                            if ($varName=='')
-                                $varName=$de->name;
-                            
-                            if (isset($values[$varName]))
-                            {
-                                $value=$values[$varName];
-                                
-                                $case->SetValue($de->name,$value);
-                            }
-                            else    // null out the values that are not in input to fix for checkboxes
-                            {
-                                $case->SetValue($de->name,"");
-                                
-                            }
-                            
-                        }
+                    $this->SetValues($caseItem,$values,false);
 		}
                 $itemStatus= new WFCase\WFCaseItemStatus($caseItem,$newStatus,$from);
                 $itemStatus->insert();
@@ -205,6 +214,10 @@ class ProcessItem extends OmniFlow\WFObject
                 }
 		return;
 	}
+        public function requiresAccessRules()
+        {
+            return false;
+        }
         public function checkAccessRules($caseItem)
         {
             $ret=WFCase\Assignment::CanPerform($this, $caseItem);
@@ -228,12 +241,16 @@ class ProcessItem extends OmniFlow\WFObject
                 if ($from!=null)
                     $fromLabel=$from->label;
 
-		OmniFlow\Context::Log(LOG,"ProcessItem Executing-Run: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
                 
                 // check Access Rules and assign Role if required
 
                 if ($this->NeedToWait($caseItem,$value,$input,$from))
+                {
+            	OmniFlow\Context::Log(LOG,"ProcessItem Executing-Invoke: Going into Wait Mode$this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
                     return false;
+                }
+                
+		OmniFlow\Context::Log(LOG,"ProcessItem Executing-Invoke: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
                 
 		if (!$this->Run($caseItem,$input,$from))
 		{

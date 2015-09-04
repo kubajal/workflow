@@ -1,7 +1,8 @@
- jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
+/* jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
   alert("Error requesting data " + settings.url + thrownError  +request +"Response:"+response);
 waiting("");
 }); 
+*/
 
 jQuery( window ).resize(function() {
     
@@ -102,19 +103,21 @@ return;
 				'svg': OmniSVG
                             };
 
-//                alert(url);
-			jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
+/*			jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
                             
 				alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
                                 waiting("");
                                 
 			});
+*/            
 							
             jQuery.post(url, data, function(response) {
-        	waiting("");
+            	waiting("");
 //				alert(response);
-                }); 	 	
-
+                }).error(function() {
+                            alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
+                            waiting("");
+                        });
 	}
 
 
@@ -219,10 +222,13 @@ return;
                             };
 
             jQuery.post(url, data, function(response) {
-        	waiting("");
-                displayStatus("Data Saved.");
+                                    waiting("");
+                                    displayStatus("Data Saved.");
                 
-                    }); 	 	
+                            }).error(function() {
+                            alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
+                            waiting("");
+                        });
 
 	}
 	function getJson()
@@ -240,15 +246,44 @@ return;
 	 				'file': file
 	 			};
 //	 	alert(url+"data :"+data.action+" "+data.command+" "+data.file);
+
+/*
+            jQuery.ajax({
+               url             :    url ,
+               type            :   'POST',
+               processData     :   false,
+               dataType        :   'text',
+               data            :   data,
+               success          :   function( data, textStatus, jqXHR ) {
+                                    displayStatus("Data Loaded.");
+                                    waiting("");
+                                    procJson=data;
+                                    jsonData=procJson;
+                                    displayData(procJson);
+                                     },
+               error           :   function() {
+                                    alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
+                                    waiting("");
+                                    },
+               complete        :   function( response) {
+                                    displayStatus("Data Loaded.");
+                                
+                                    }                                    
+            });
+
+*/
 		jQuery.post(url, data, function(response) {
 //			alert(response);
-            displayStatus("Data Loaded.");
-        
-            waiting("");
+                        displayStatus("Data Loaded.");
+
+                        waiting("");
 			procJson=response;
                         jsonData=procJson;
 			displayData(procJson);
-			}); 	 
+			}).error(function() {
+                            alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
+                            waiting("");
+                        });
 	}
         function validationError(item,tab)
         {
@@ -274,13 +309,27 @@ return;
 	 			};
 //	 	alert(url+"data :"+data.action+" "+data.command+" "+data.file);
 		jQuery.post(url, data, function(response) {
-            displayStatus("Validated.");
+                displayStatus("Validated.");
+                // jQuery UI solution
                 
+                            var $dialog = jQuery('<div style="overflow-y: scroll;height:400px">'+response+'</div>')
+                                    .dialog({
+//                                            autoOpen: false,
+                                            title: 'Validation Results',
+                                            width: 500,
+                                            height: 400
+                                    });
+                return;
+                
+                // dhxWins solution
                 dhxWins = new dhtmlXWindows();
                 var w1 = dhxWins.createWindow("w1", 200, 200, 320, 450);
                 w1.setText("Validation Results");
                 w1.attachHTMLString('<div style="overflow-y: scroll;height:400px">'+response+'</div>');
-		}); 	 
+		}).error(function() {
+                            alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
+                            waiting("");
+                        });	 
 	}
 
         

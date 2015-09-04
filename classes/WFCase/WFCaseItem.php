@@ -121,13 +121,8 @@ class WFCaseItem extends OmniFlow\WFObject
 		$db=new OmniFlow\CaseItemModel();
 		$db->update($this);
 		$this->case->proc->Notify(OmniFlow\enum\NotificationTypes::CaseItemSaved,$this);
-		
-		$this->case->proc->Notify(OmniFlow\enum\NotificationTypes::CaseSaving,$this->case);
-		
-                $db=new OmniFlow\CaseModel();
-		$db->update($this->case);
-		
-		$this->case->proc->Notify(OmniFlow\enum\NotificationTypes::CaseSaved,$this->case);
+
+                $this->case->Update();
 		
 	}
 	

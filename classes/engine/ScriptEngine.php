@@ -40,6 +40,7 @@ class ScriptEngine
         var $vars;
         var $output="";
         var $result;
+        var $returning=false;
         var $scriptBlocks; //tree 
         var $debugLines=Array();
         var $messages=Array();
@@ -82,14 +83,13 @@ function getNode($node,$childName)
         if ($child->type==$childName)
             return $child;
     }
-    echo "ERROR expecting $childName";
     return null;
 }
 function debug($msg)
 {
 //    echo $msg;
 }
-function executeNode($node,$type='')
+function executeNode($node,$takesControl=false,$type='')
 {
     if ($type=='')
     {
@@ -106,6 +106,13 @@ function executeNode($node,$type='')
     }
     switch($type)
     {
+        case 'break':
+            $this->break=true;
+            break;
+        case 'continue':
+            $this->continue=true;
+            break;
+        
         case 'if':
             {
                 $condition=$this->getNode($node,'condition');
@@ -113,20 +120,106 @@ function executeNode($node,$type='')
                 $expr=$this->getNode($condition,'expression');
                 $isTrue=$this->executeNode($expr);
                 if ($isTrue)
-                    $ret=$this->executeNode($block,'block');
+                    $ret=$this->executeNode($block,false,'block');
                 else 
                 {
                     $block=$this->getNode($node,'else');
                     if ($block!==null)
-                        $this->executeNode($block,'block');
+                        $this->executeNode($block,false,'block');
+                }
+                break;
+            }
+        case 'while':
+            {
+                while(1)
+                {
+                    $condition=$this->getNode($node,'condition');
+                    $block=$this->getNode($node,'do');
+                    $expr=$this->getNode($condition,'expression');
+                    $isTrue=$this->executeNode($expr);
+                    if ($isTrue)
+                    {
+                        $r=$this->executeNode($block,false,'block');
+                        if ($this->break)
+                        {
+                            $this->break=false;
+                            break;
+                        }
+                        if ($this->continue)
+                        {
+                            $this->continue=false;
+                        }
+                        if ($r!==null) // null means didn't execute
+                            $ret=$r;
+                        if ($this->returning)
+                            return $ret;
+
+
+                    }
+                    else 
+                    {
+                        break;
+                    }
                 }
                 break;
             }
            
+        case 'foreach':
+            {
+                $arrName=$this->getNode($node,'collection')->value;
+                $varName=$this->getNode($node,'var')->value;
+                $block=$this->getNode($node,'do');
+
+                $oldValue=$this->vars[$varName];
+                $arr=$this->vars[$arrName];
+                
+                foreach($arr as $v)
+                {
+                    $this->vars[$varName]=$v;
+                    $r=$this->executeNode($block,false,'block');
+
+                    if ($this->break)
+                    {
+                        $this->break=false;
+                        break;
+                    }
+                    elseif ($this->continue)
+                    {
+                        $this->continue=false;
+                    }
+                    if ($r!==null) // null means didn't execute
+                        $ret=$r;
+                    if ($this->returning)
+                        break;
+
+                }
+                $this->vars[$varName]=$oldValue;
+                if ($this->returning)
+                    return $ret;                
+                break;
+            }
+           
+           
         case 'block':
             foreach($node->children as $child)
             {
-            $ret=$this->executeNode($child);
+                $r=$this->executeNode($child);
+                if ($this->continue)
+                {
+                    if ($takesControl)
+                        $this->continue=false;
+                    break;  // no more children but parent will continue next record
+                }
+                if ($this->break)
+                {
+                    if ($takesControl)
+                        $this->break=false;
+                    break;
+                }
+                if ($r!==null) // null means didn't execute
+                    $ret=$r;
+                if ($this->returning)
+                    return $ret;
             }
             return $ret;
             break;
@@ -165,29 +258,41 @@ function executeNode($node,$type='')
 }
 
 // -------------------------------------------------------
-public static function Validate($processName)
+public static function Validate($proc)
 {
     
 	$lang=new ScriptEngine();
 
         
-       	$case=ProcessSvc::StartProcess($processName);
-        $process=$case->proc;
-
+//     	$case=ProcessSvc::StartProcess($processName);
+//        $process=$case->proc;
+        
+        $case= \OmniFlow\WFCase\WFCase::SampleCaseForProcess($proc);
 	$lang->Init($case);
         
         $msgs=Array();
-        $scripts=$process->getAllScripts();
+        $scripts=$proc->getAllScripts();
         
         foreach($scripts as $scr)
         {
+            $scr['script']=str_replace("~~n~~", "\n", $scr['script']);
             $script=$scr['script'];
+            
+            try
+            {
+            
             $lang=$lang->Execute($script);
+            }
+            catch (\Exception $ex) {
+                $msg="Script for ".$scr['nodeId']."-".$scr['type']." has an error <br/>Script:'".$script."'".$ex->getMessage();
+                Context::Log(VALIDATION_ERROR, $msg);
+            }
         }
-            foreach($lang->messages as $out)
+
+        foreach($lang->messages as $out)
             {
                 {
-                    $msg="Script for ".$scr['nodeId']."-".$scr['type']." has an error ".$out;
+                    $msg="Script for ".$scr['nodeId']."-".$scr['type']." has an error <br/>Script:'".$scr['script']."'".$out;
                     Context::Log(VALIDATION_ERROR, $msg);
                     
                 }
@@ -257,6 +362,8 @@ function Init($case)
         $sbUser=new UserSandbox();
 	$this->vars=$case->values;
         $this->vars['String']=new StringSandbox();
+        $this->vars['Date']=new DateSandbox();
+        $this->vars['Web']=new WebSandbox();
         $this->vars['_case']=$sbCase;
         $this->vars['_user']=$sbUser;
         $this->vars['_context']= new ContextSandbox();

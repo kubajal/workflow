@@ -477,7 +477,7 @@ class ProcessExtensions
  		
  		if ($processItem==null)
  		{
- 			Context::Log(ERROR,"Item specified in xml file not found $id-$name");
+ 			Context::Log("Item specified in xml file not found $id-$name");
  			return;
  		}
  	

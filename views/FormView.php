@@ -37,6 +37,8 @@ public function displayForm(WFCase\WFCaseItem $item)
                 
                 $title =$proc->title.'-'.$task->label.' for case '.$case->caseId;
 		$h1=Helper::getUrl(array("action"=>"task.saveForm","case"=>$caseId,"item"=>$id));
+		$h2=Helper::getUrl(array("action"=>"task.release","case"=>$caseId,"item"=>$id));
+                
 ?>	
    <div class='formBox' style='margin: 0px;
                     border: rgb(205, 77, 194);
@@ -108,8 +110,10 @@ public function displayForm(WFCase\WFCaseItem $item)
                             $values=explode('\r',$dataElement->validValues);
                             $values= preg_split ('/$\R?^/m', $dataElement->validValues);
                             foreach($values as $sval) {
-                             if ($val==$sval)
-                                 $checked='checked';
+                                $checked='';
+                                
+                                if ($val==$sval)
+                                   $checked='checked';
                              
                                 $input.="<input type='radio' class='col-xs-1' name='$fld' id='$fld' value='$sval' $checked /> "
                                         . "<span class='col-xs-3'>$sval</span>";
@@ -163,7 +167,12 @@ public function displayForm(WFCase\WFCaseItem $item)
         self::Field("complete", "Consider this Task Complete","<input type='checkbox' name='_complete'  />","To proceed to next task in the workflow");
         self::Field("save", "","<input type='submit'  value='Save' />","");
 
-        echo "
+        echo "</form>
+            <form name='release' id='release' class='form-horizontal' action='$h2' method='post'>
+        ";
+        self::Field("Release me from this Task", "","<input type='submit'  value='release from Task' />","");
+        echo "</form>
+
         <br /> 
         <br /> 
 <script>

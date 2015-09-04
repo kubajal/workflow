@@ -212,38 +212,21 @@ class ActionManager
 		Context::Log(INFO,' saveForm: '.print_r($post,true));
 		$caseId=$post['_caseId'];
 		$id=$post['_itemId'];
-		$status=\OmniFlow\enum\StatusTypes::Started;
+		$item=CaseSvc::LoadCaseItem($caseId, $id);
+                
+                if ($item->status===\OmniFlow\enum\StatusTypes::Completed)
+                {
+//                   throw new \Exception("Task is already Completed.");
+                }
 		if (isset($post['_complete']))
 			{
-			$action=$post['_complete'];
-			$status=\OmniFlow\enum\StatusTypes::Completed;
+	   		TaskSvc::Complete($item, $post);
 			}
-		$item=CaseSvc::LoadCaseItem($caseId, $id);
-		$case=$item->case;
-		$task=$item->getProcessItem();
+                else {
+        		TaskSvc::SaveData($item, $post);
+	
+                 }
 		
-		TaskSvc::SetStatus($caseId, $id, $status, $post);
-		
-		/*
-		foreach($post as $var=>$val)
-		{
-			if (($var=='_caseId') || ($var=='_itemId'))
-			{
-				
-			}
-			else
-			{
-				foreach($task->variables as $v)
-				{
-					if ($v->field==$var)
-					{
-						echo 'value for '.$var. ' ='.$val;
-						$case->setValue($v->name,$val);
-					}
-				}
-			}
-			
-		} */
                 
                 return $case;
 	}

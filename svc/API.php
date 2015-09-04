@@ -106,35 +106,33 @@ class SystemSvc
 
 class TaskSvc
 {
-	public static function Invoke($caseId,$itemId,$values=null)
-	{
-		Context::Log(INFO, 'API::Invoke id:'.$itemId.'  values: '.print_r($values,true));
-		
-		$case= CaseSvc::LoadCase($caseId);
-		$proc=$case->proc;
-		$item = $case->getItem($itemId);
-		
-		$taskId = $item->processNodeId;
-		
-		$task = $proc->getItemById($taskId);
-		if ($task==null)
-		{
-			Context::Log(ERROR,"Error task not found for $taskId in Case $caseId - $itemId");
-			return false;
-		}
-//		Context::Log(LOG,( '<br /><hr /> Set Status - Task');
-		$task->Invoke($item,$values,"",null);
-		
-		return $case;
-	}
 	// 
-	public static function SetStatus($caseId,$itemId,$status=\OmniFlow\enum\StatusTypes::Completed,$values=null)
+	public static function SaveData(WFCase\WFCaseItem $caseItem,$values)
 	{
-		Context::Log(INFO, 'API::SetStatus id:'.$itemId.' status:'.$status.' values: '.print_r($values,true));
+        Context::Log(INFO, 'API::Run id:'.$caseItem.id.'  values: '.print_r($values,true));
 		
-		$case= CaseSvc::LoadCase($caseId);
+		$case= $caseItem->case;
 		$proc=$case->proc;
-		$item = $case->getItem($itemId);
+                
+		$taskId = $caseItem->processNodeId;
+		
+		$task = $proc->getItemById($taskId);
+		if ($task==null)
+		{
+                        $caseId=$case->caseId;
+                        $itemId=$caseItem.id;
+			Context::Log(ERROR,"Error task not found for $taskId in Case $caseId - $itemId");
+			return false;
+		}
+		$task->SetValues($caseItem,$values);
+	}
+
+	public static function Complete(WFCase\WFCaseItem $item,$values=null)
+	{
+		Context::Log(INFO, 'API::Run id:'.$item->id.' values: '.print_r($values,true));
+		
+		$case= $item->case;
+		$proc=$case->proc;
 		
 		$taskId = $item->processNodeId;
 		
@@ -144,20 +142,7 @@ class TaskSvc
 			Context::Log(ERROR,"Error task not found for $taskId in Case $caseId - $itemId");
 			return false;
 		}
-//		Context::Log(LOG,( '<br /><hr /> Set Status - Task');
-		$task->setStatus($item,$status,$values);
-		
-		if(is_array($values))
-		{
-			$values="";
-		}
-
-		if ($status==\OmniFlow\enum\StatusTypes::Completed)
-		{
-			$task->Finish($item,$values,null);
-		}		
-		// var_dump($task);
-//		$proc->Save();
+		$task->Complete($item,$values);
 		
 		return $case;
 	}

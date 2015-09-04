@@ -240,7 +240,7 @@ class Process extends OmniFlow\WFObject
 	}
 	function AddClassListener($className,$fileName)
 	{
-		$conf=new Config();
+		$conf=new \OmniFlow\Config();
 		
 		$classFile=$conf->processPath.'/'.$fileName;
 //		echo $classFile;
@@ -368,7 +368,14 @@ class Process extends OmniFlow\WFObject
         public function Validate()
         {
             OmniFlow\ValidationRule::ValidateProcess($this);
-            OmniFlow\ScriptEngine::Validate($this->processName);
+            OmniFlow\ScriptEngine::Validate($this);
+            foreach($this->items as $item)
+            {
+                if ($item->requiresAccessRules())
+                {
+                    AccessRule::Validate($item);
+                }
+            }
         }
 	
 	public static function Load($fileName,$loadExtensions=true)

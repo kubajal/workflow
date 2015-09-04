@@ -125,6 +125,7 @@ class ExpressionFunctionHelper
 	static function returnFunct($language,$exp)
 	{
             $language->result=$exp;
+            $language->returning=true;
             return $exp;
 	}
         static function declareFunct($language,$name)
@@ -201,9 +202,17 @@ class StringSandbox
 }
 class DateSandbox
 {
+    function setTimezone($zone)
+    {
+        date_default_timezone_set($zone);    
+    }
     function now($format)
     {
-        
+        return date($format);
+    }
+    function getDate($format)
+    {
+        return getDate($format);
     }
     function daysBetween($d1,$d2)
     {

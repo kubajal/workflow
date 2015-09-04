@@ -163,7 +163,17 @@ class Event extends Node
 		}
 		return false;
         }
-
+        public function requiresAccessRules()
+        {
+            if ( ($this->type=='startEvent') && ($this->isExecutable()) && 
+                 (!$this->hasMessage) && (!$this->hasSignal) && (!$this->hasTimer)
+                 )
+            {
+                return true;
+            }
+            else
+                return false;
+        }
 	function Run(WFCase\WFCaseItem $caseItem,$input,$from)
 	{
 		// an event is invoked;
@@ -171,8 +181,12 @@ class Event extends Node
 		 * Need to know the difference between executed as in Started and Invoked because of a message
 		 * 
 		 */
-            $this->checkAccessRules($caseItem);
-            $caseItem->UserTake();
+            if ($this->requiresAccessRules())
+            {
+                // only if it is a manual event
+                $this->checkAccessRules($caseItem);
+                $caseItem->UserTake();
+            }
             return true;
 	}
 	/*

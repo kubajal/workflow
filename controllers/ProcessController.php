@@ -117,13 +117,24 @@ class ProcessController extends Controller{
 		$file=$req["file"];
 		$proc=BPMN\Process::Load($file,true);
 		$db=new ProcessModel();
-		$db->Register($proc);
+	        
+		$v=new ProcessListView();
+                $v->header();
+                $db->unRegister($file);
+                $db->Register($proc);
+                $v->endPage();
+	                
     }		
     public function Action_unregister($req) {
         $file=$req["file"];
         $proc=BPMN\Process::Load($file,true);
 	$db=new ProcessModel();
+        
+        $v=new ProcessListView();
+        $v->header();
         $db->unRegister($file);
+        $v->endPage();
+        
     }		
 
     public function Action_saveJson($req,$saveToXML=true) {
