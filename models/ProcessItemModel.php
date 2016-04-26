@@ -29,6 +29,14 @@ class ProcessItemModel extends OmniModel
                 join $pTable p on p.id=i.processId 
                 where message='.$messageName'");        
     }
+    public function updateTimer(BPMN\ProcessItem $item,$dueDate)
+    {
+            $data=array('timerDue'=>$dueDate );
+            $processId=$process->processId;
+
+            $this->db->updateRow($this->getTable(),$data,"processNodeid='$item->id'");		
+                		
+    }
     public function getTableDDL()
     {
         $table=array();
@@ -48,6 +56,7 @@ class ProcessItemModel extends OmniModel
 				`message` varchar(45) DEFAULT NULL,
 				`messageKeys` varchar(450) DEFAULT NULL,
 				`signalName` varchar(45) DEFAULT NULL,
+                                `authorizedGroups` varchar(245) DEFAULT NULL,
 				`created` datetime DEFAULT NULL,
 				`updated` datetime DEFAULT NULL,
 				PRIMARY KEY (`id`),

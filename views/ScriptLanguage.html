@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<!--
+Copyright (C) 2015 ralph
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<h2>Express Language Usage</h2>
+<ul>
+	<li>Flow and Nodes Conditions</li>
+	<li>Access Rules Conditions</li>
+	<li>Assignment Rules</li>
+</ul>
+<h2>Syntax</h2>
+<div>
+<h3>Basic Expression Syntax</h3>
+<div>
+Basic Syntax of Omni-Expression is a single expression; same as that of "Symfony Expression Language"
+<pre><code> age&gt;25 &amp;&amp; carType=='Sports'</code></pre></div>
+<h3>Script Syntax</h3>
+<h4>Comments</h4>
+Comments are included between <strong>/*</strong> and <strong>*/</strong> tags
+<h4>Variable definition and Assignments</h4>
+variables can be assigned values, if the variable does not existed it will be created.
+<pre>variable1='abc';
+/* new variable is now declared with value 'abc' */</pre>
+<h4>Multi-Statements separated by ';'</h4>
+Scripts can contain multiple statements with ';' separator
+<pre>variable1='abc';</pre>
+<pre>variable2='zyz';</pre>
+<pre>log('testing for variables '~variable1~' and '~variable2);</pre>
+<pre></pre>
+<h4>Conditional Logic</h4>
+If (expression) { true logic } else {  false logic}
+<pre><code> if (amount&gt;500)
+ {
+ return(true);
+ }
+ else
+ {
+ return(false);
+ }</code></pre>
+<h3>Supported Literals</h3>
+The component supports:
+<ul class="simple">
+	<li><strong>strings</strong> - single and double quotes (e.g. <tt class="docutils literal"><code>'hello'</code></tt>)</li>
+	<li><strong>numbers</strong> - e.g. <tt class="docutils literal"><code>103</code></tt></li>
+	<li><strong>arrays</strong> - using JSON-like notation (e.g. <tt class="docutils literal"><code>[1, 2]</code></tt>)</li>
+	<li><strong>hashes</strong> - using JSON-like notation (e.g. <tt class="docutils literal"><code>{ foo: 'bar' }</code></tt>)</li>
+	<li><strong>booleans</strong> - <tt class="docutils literal"><code>true</code></tt> and <tt class="docutils literal"><code>false</code></tt></li>
+	<li><strong>null</strong> - <tt class="docutils literal"><code>null</code></tt></li>
+</ul>
+</div>    
+<h2>Working with Objects</h2>
+<div id="working-with-objects" class="section">
+When passing objects into an expression, you can use different syntaxes to access properties and call methods on the object.
+
+The following Objects are available to all Expressions
+<table>
+<tbody>
+<tr>
+<td>object name</td>
+<td>Description</td>
+<td></td>
+</tr>
+<tr>
+<td>_case</td>
+<td>The current Workflow Case</td>
+<td></td>
+</tr>
+<tr>
+<td>_context</td>
+<td>contains information about the current session</td>
+<td></td>
+</tr>
+<tr>
+<td>_user</td>
+<td>User Informaton</td>
+<td></td>
+</tr>
+<tr>
+<td>_process</td>
+<td>Process Meta Data</td>
+<td></td>
+</tr>
+<tr>
+<td>String</td>
+<td>String.length('abc')
+
+String.Substring('abc',5)
+
+String.Contains('abc','c')
+
+String.pos('abc','c')
+
+String.replace(string1,search,replace)
+
+String.compare(string1,string2)</td>
+<td>&nbsp;
+
+&nbsp;</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>Date.now(format)
+
+Date.DaysBetween(date1,date2)
+
+Date.WorkingDaysBetween(date1,date2)
+
+Date.hoursBetween(date1,date2)
+
+Date.setTimezone('America/Los_Angeles');
+Date.now("D M j -- Y-m-d H:i:s T");
+Date.getDate();
+Date.getDate()['hours'];</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>Date.getDate()</td>
+<td>Returns an array of date parts</td>
+</tr>
+<tr>
+<td></td>
+<td>Date.setTimezone(timezone)</td>
+<td>Defines the timezone for the script</td>
+</tr>
+<tr>
+<td>Web</td>
+<td>/* Web Service Example */
+
+Web.addParameter('symbol','AAPL');
+
+Web.invokeService('http://www.webservicex.net/stockquote.asmx?WSDL','GetQuote');
+
+log(Web.result); /* just to help you understand the results */
+
+Web.XMLtoArray(Web.result.GetQuoteResult);
+
+Quote= Web.XMLtoArray(Web.result.GetQuoteResult);
+Stock=Quote['Stock'];
+log("Stock: "~Stock['Symbol'] ~" last price "~Stock['Last']);</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3></h3>
+<div id="accessing-public-properties" class="section">
+<h3>Accessing Public Properties</h3>
+Public properties on objects can be accessed by using the <tt class="docutils literal"><code>.</code></tt> syntax, similar to JavaScript:
+<div class="literal-block">
+<div class="highlight-php">Calling Methods</div>
+</div>
+</div>
+<div id="calling-methods" class="section">
+
+The <tt class="docutils literal"><code>.</code></tt> syntax can also be used to call methods on an object, similar to JavaScript:
+<div class="literal-block">
+<div class="highlight-php">
+<table class="highlighttable">
+<tbody>
+<tr>
+<td class="linenos"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<h2>Built-in Functions</h2>
+<div id="working-with-functions" class="section">
+    
+The following functions are Omni-Script Extension:
+<table>
+<tbody>
+<tr>
+<th>Function</th>
+<th>description</th>
+</tr>
+<tr>
+<td>return(expression)</td>
+<td>Returns the value of the expression and ends execution, useful for conditions.</td>
+</tr>
+<tr>
+<td>log(expression)</td>
+<td>displays the value of the expression</td>
+</tr>
+</tbody>
+</table>
+<h3>Working with Functions</h3>
+You can also use registered functions in the expression by using the same syntax as PHP and JavaScript. The ExpressionLanguage component comes with one function by default: <tt class="docutils literal"><code>constant()</code></tt>, which will return the value of the PHP constant:
+<div class="admonition-wrapper">
+<div class="tip"> Working with Arrays</div>
+</div>
+</div>
+<h2>Working with Arrays</h2>
+<div id="working-with-arrays" class="section">
+
+If you pass an array into an expression, use the <tt class="docutils literal"><code>[]</code></tt> syntax to access array keys, similar to JavaScript:
+<div class="literal-block">
+<div class="highlight-php">
+<table class="highlighttable">
+<tbody>
+<tr>
+<td class="linenos"></td>
+<td class="code">
+<div class="highlight">
+<pre><span class="s1">data["life"] + data["universe"] + data["everything"]</span>
+
+</pre>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+&nbsp;
+
+</div>
+<h2>Supported Operators</h2>
+<div id="supported-operators" class="section">
+
+The component comes with a lot of operators:
+<div id="arithmetic-operators" class="section">
+<h3>Arithmetic Operators</h3>
+<ul class="simple">
+	<li><tt class="docutils literal"><code>+</code></tt> (addition)</li>
+	<li><tt class="docutils literal"><code>-</code></tt> (subtraction)</li>
+	<li><tt class="docutils literal"><code>*</code></tt> (multiplication)</li>
+	<li><tt class="docutils literal"><code>/</code></tt> (division)</li>
+	<li><tt class="docutils literal"><code>%</code></tt> (modulus)</li>
+	<li><tt class="docutils literal"><code>**</code></tt> (pow)</li>
+</ul>
+For example:
+<div class="literal-block">
+<div class="highlight-php">
+<table class="highlighttable">
+<tbody>
+<tr>
+<td class="linenos"></td>
+<td class="code">
+<div class="highlight">
+<pre><span class="s1">life + universe + everything</span>
+</pre>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="bitwise-operators" class="section">
+<h3>Bitwise Operators</h3>
+<ul class="simple">
+	<li><tt class="docutils literal"><code>&amp;</code></tt> (and)</li>
+	<li><tt class="docutils literal"><code>|</code></tt> (or)</li>
+	<li><tt class="docutils literal"><code>^</code></tt> (xor)</li>
+</ul>
+</div>
+<div id="comparison-operators" class="section">
+<h3>Comparison Operators</h3>
+<ul class="simple">
+	<li><tt class="docutils literal"><code>==</code></tt> (equal)</li>
+	<li><tt class="docutils literal"><code>===</code></tt> (identical)</li>
+	<li><tt class="docutils literal"><code>!=</code></tt> (not equal)</li>
+	<li><tt class="docutils literal"><code>!==</code></tt> (not identical)</li>
+	<li><tt class="docutils literal"><code>&lt;</code></tt> (less than)</li>
+	<li><tt class="docutils literal"><code>&gt;</code></tt> (greater than)</li>
+	<li><tt class="docutils literal"><code>&lt;=</code></tt> (less than or equal to)</li>
+	<li><tt class="docutils literal"><code>&gt;=</code></tt> (greater than or equal to)</li>
+	<li><tt class="docutils literal"><code>matches</code></tt> (regex match)</li>
+</ul>
+<div class="admonition-wrapper">
+<div class="tip"></div>
+<div class="admonition admonition-tip">
+
+To test if a string does <em>not</em> match a regex, use the logical <tt class="docutils literal"><code>not</code></tt> operator in combination with the <tt class="docutils literal"><code>matches</code></tt> operator:
+<div class="literal-block">
+<div class="highlight-php">
+<table class="highlighttable">
+<tbody>
+<tr>
+<td class="linenos"></td>
+<td class="code">
+<div class="highlight">
+<pre><span class="s1">not ("foo" matches "/bar/")</span>
+</pre>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p class="last">You must use parenthesis because the unary operator <tt class="docutils literal"><code>not</code></tt> has precedence over the binary operator <tt class="docutils literal"><code>matches</code></tt>.</p>
+
+</div>
+</div>
+Examples:
+<div class="literal-block">
+<div class="highlight-php">
+<table class="highlighttable">
+<tbody>
+<tr>
+<td class="linenos"></td>
+<td class="code">
+<div class="highlight">
+<pre><span class="s1">life == everything</span>
+</pre>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="logical-operators" class="section">
+<h3>Logical Operators</h3>
+<ul class="simple">
+	<li><tt class="docutils literal"><code>not</code></tt> or <tt class="docutils literal"><code>!</code></tt></li>
+	<li><tt class="docutils literal"><code>and</code></tt> or <tt class="docutils literal"><code>&amp;&amp;</code></tt></li>
+	<li><tt class="docutils literal"><code>or</code></tt> or <tt class="docutils literal"><code>||</code></tt></li>
+</ul>
+For example:
+<div class="literal-block">
+<div class="highlight-php">
+<table class="highlighttable">
+<tbody>
+<tr>
+<td class="linenos"></td>
+<td class="code">
+<div class="highlight">
+<pre><span class="s1">life &lt; universe or life &lt; everything</span>
+</pre>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="string-operators" class="section">
+<ul class="simple">
+	<li><tt class="docutils literal"><code>~</code></tt> (concatenation)</li>
+</ul>
+For example:
+<div class="literal-block">
+<div class="highlight-php">
+<table class="highlighttable">
+<tbody>
+<tr>
+<td class="linenos"></td>
+<td class="code">
+<div class="highlight">
+<pre><span class="s1">firstName~" "~lastName
+
+_case.items[1].processNodeId~'|'~_case.items[1].type~'|'~_case.items[1].label</span>
+</pre>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="array-operators" class="section">
+<h3>Array Operators</h3>
+<ul class="simple">
+	<li><tt class="docutils literal"><code>in</code></tt> (contain)</li>
+	<li><tt class="docutils literal"><code>not in</code></tt> (does not contain)</li>
+</ul>
+For example:
+<div class="literal-block">
+<div class="highlight-php">
+<table class="highlighttable">
+<tbody>
+<tr>
+<td class="linenos"></td>
+<td class="code">
+<div class="highlight">
+<pre><span class="s1">user.group in ["human_resources", "marketing"]</span>
+</pre>
+</div></td>
+</tr>
+<tr>
+<td class="linenos"></td>
+<td class="code"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+The <tt class="docutils literal"><code>$inGroup</code></tt> would evaluate to <tt class="docutils literal"><code>true</code></tt>.
+
+</div>
+<div id="numeric-operators" class="section">
+<h3>Numeric Operators</h3>
+<ul class="simple">
+	<li><tt class="docutils literal"><code>..</code></tt> (range)</li>
+</ul>
+For example:
+<div class="literal-block">
+<div class="highlight-php">
+<table class="highlighttable">
+<tbody>
+<tr>
+<td class="linenos"></td>
+<td class="code">
+<div class="highlight">
+<pre><span class="s1">user.age in 18..45'</span><span class="p">,</span>
+
+</pre>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+This will evaluate to <tt class="docutils literal"><code>true</code></tt>, because <tt class="docutils literal"><code>user.age</code></tt> is in the range from <tt class="docutils literal"><code>18</code></tt> to <tt class="docutils literal"><code>45</code></tt>.
+
+</div>
+<div id="ternary-operators" class="section">
+<h3>Ternary Operators</h3>
+<ul class="simple">
+	<li><tt class="docutils literal"><code>foo ? 'yes' : 'no'</code></tt></li>
+	<li><tt class="docutils literal"><code>foo ?: 'no'</code></tt> (equal to <tt class="docutils literal"><code>foo ? foo : 'no'</code></tt>)</li>
+	<li><tt class="docutils literal"><code>foo ? 'yes'</code></tt> (equal to <tt class="docutils literal"><code>foo ? 'yes' : ''</code></tt>)</li>
+</ul>
+</div>
+</div>

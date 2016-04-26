@@ -28,11 +28,11 @@ class ParserNode
     var $parent;
     var $children=Array();
 
-    public function __construct($type,$parent,$title='')
+    public function __construct($type,$parent,$value='')
     {
         $this->type=$type;
         $this->parent=$parent;
-        $this->value=$title;
+        $this->value=$value;
         if ($parent!==null)
             $parent->children[]=$this;
     }
@@ -135,7 +135,7 @@ function searchFor($type,$tag)
 /* Do Functions
  *  process a piece of code
  */
-function doBlock($parent)
+function doBlock($parent,$insideTemplate=false)
 {
     
     $node=new ParserNode('block',$parent);    
@@ -144,8 +144,30 @@ function doBlock($parent)
     {
        $tag=$token->value;
        
-
-       if (($token->type=='name') || ($token->type=='punctuation')) { 
+       if (($token->type=='mode_switch'))
+       {
+            switch($tag)
+            {
+                case '*/':
+                case '/*':
+                    // skip this node
+                    
+                    break;
+                case '}}':
+                    // end of block inside template
+                    if ($insideTemplate)
+                        return;
+                case '<<':
+                    $statementNode=null;
+                    $this->doTemplate($node);
+                    break;
+                case '>>':
+                    // skip this node
+                    echo 'template';
+                    break;
+            }
+       }
+       elseif (($token->type=='name') || ($token->type=='punctuation')) { 
        
             switch($tag)
             {
@@ -165,7 +187,7 @@ function doBlock($parent)
                     break;
                 
                 case 'while':
-                     $statementNode=null;
+                    $statementNode=null;
                     $this->doWhile($node);
                     break;
                 case 'foreach':
@@ -221,7 +243,9 @@ function doExpression($parent)
 {
     
     $node=new ParserNode('expression',$parent);    
+
     
+    $stack=1;   // already has 1 (
     while(($token=$this->nextToken())!=null)
     {
        $tag=$token->value;
@@ -230,10 +254,15 @@ function doExpression($parent)
             {
                 case ')':
                     // end block
-                    return $node;
+                    $stack--;
+                    if ($stack==0)
+                        return $node;
+                    else 
+                       $this->doToken($node);
                     break;
                 case '(':
-                    $this->doExpression($node);
+                    $this->doToken($node);
+                    $stack++;
                     break;
                 default :
                 {
@@ -254,16 +283,79 @@ function doTemplate($parent)
 {
     /*
      * syntax
-     *  template (array as record)
-     *  {
-     *   text is here 
-     *      {variable}
-     *   text is here 
-     *          {variable}
-     * 
-     *  }
+     *  <<
+     * Text is here
+     * >>
      */
+    
+    
     $node=new ParserNode('template',$parent);
+    while(1)
+    {
+        $token=$this->nextToken();
+        if ($token->type==="end of expression")
+        {
+            echo 'Error expecting end of template';
+            return;
+        } elseif ( ($token->type==Token::MODE_SWITCH_TYPE) && ($token->value=='>>') ) {
+            // end of template
+            return;
+        } elseif ( ($token->type==Token::MODE_SWITCH_TYPE) && ($token->value=='{{') ) {
+            $this->doBlock($node,true);
+        } elseif ( $token->type == Token::MODE_TEXT_TYPE ) {
+            
+            new ParserNode('mode_text',$node,$token->value);
+        } 
+        else {
+            $this->doToken($node);
+        }
+            
+    }
+    return;
+    $tokenText=$this->nextToken();
+    
+    if ( ($tokenText->type==Token::MODE_TEXT_TYPE))
+    {
+        $token=$this->nextToken();
+        if ( ($token->type==Token::MODE_SWITCH_TYPE) && ($token->value=='>>') ) {
+            }
+            else {
+                echo 'ERROR';
+            }
+        
+        $template=$tokenText->value;
+        echo 'Template:'.$template;
+    }
+    else
+    {
+        echo 'Error';
+        return;
+    }
+    /*
+     *  template syntax <<text {{expression}} more text >>
+     */
+      $cursor = 0;
+      $end = strlen($template);
+      while ($cursor < $end) {
+          
+            if (false !== strpos( substr($template,$cursor,2),'{{')) {
+                // Template
+                $p1=$cursor+2;
+                $p2 = strpos($template,'}}',$cursor+2);
+                if ($p2===false)
+                {
+                   echo ' Error';
+                    $cursor+=2;
+                }
+                else {
+                    $str=substr($template,$p1,$p2-$p1);
+                    $cursor=$p2+2;
+                }    
+            }
+          
+      }
+      
+    return;
 
     if ($this->nextTokenIs(Token::PUNCTUATION_TYPE,'('))
     {
@@ -402,7 +494,7 @@ function doIf($parent)
  
 function debug($msg)
 {
-    // ` $msg;
+//    echo $msg;
 }
  public function parseScript(TokenStream $stream, $names = array(),$tokens)
     {

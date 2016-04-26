@@ -35,13 +35,13 @@ class ProcessSvc
 
 	  
 	// Starts a new Process returning the CaseId
-	public static function StartProcess($fileName,$startNodeId=null)
+	public static function StartProcess($processId,$startNodeId=null,$testMode=false)
 	{
                 $starter=$startNodeId;
-		$proc= BPMN\Process::Load($fileName);
+		$proc= BPMN\Process::LoadProcess($processId);
                 if ($starter===null)
                 {
-                    $starter=$proc->getStartNode();
+                    $starter=$proc->getStartNode($testMode);
                     if (count($starter)==0)
                     {
                         Context::Error("No Start Event is available for this process");
@@ -52,32 +52,20 @@ class ProcessSvc
                         $starter=$starter[0];
                         $starterId=$starter->id;
                     }
+                } else {
+                    if (is_string($startNodeId))
+                    {
+                        $starterId=$startNodeId;
+                        $starter=$proc->getItemById($startNodeId);
+                    }
                 }
                 
                 WFCase\Assignment::CanPerform($starter, null);
                         
-		$newCase=WFCase\WFCase::NewCase($proc);
+                 $newCase=WFCase\WFCase::NewCase($proc);
 		$proc->Start($newCase,$starterId);
 		return $newCase;
 		
-	}
-	/*
-	 * ExternalMessage
-	 * is called when an external system like 'wordPress' calls a message
-	 * 
-	 * OmniWorkflow: will search for the appropriate Process or Case to Respond to this message
-	 * based on various Message Definitions
-	 * 
-	 * 		This is called by plugin functions for wordPress messageName is WordPress_<actionName>
-	 * 			for example:	WordPress_save_post
-	 * 	 
-	 *			add_action( 'save_post', 'omni_workflow_wordPress_save_post' );
-	 * 
-	 * 			
-	 */
-	public static function HandleMessage($messageName,$data)
-	{
-		EventEngine::HandleMessage($messageName,$data);
 	}
 	
 	/*
@@ -94,23 +82,47 @@ class ProcessSvc
 		
 	}
 }
-class SystemSvc
-{
-    	public static function CheckTimer($duration=60)
-	{
-		EventEngine::Check($duration);
-	}
-	
 
-}
 
 class TaskSvc
 {
-	// 
-	public static function SaveData(WFCase\WFCaseItem $caseItem,$values)
+	/*
+         *  ReceiveData command
+         *  Process the message for the item
+         * 
+         */
+	public static function ReceiveMessage(WFCase\WFCaseItem $caseItem,$messageName,$messageData)
+        {
+                $task=self::getTask($caseItem);
+                $task->ReceiveMessage($caseItem,$messageName,$messageData);
+            
+        }
+	/*
+         *  SignalData command
+         *  Process the Signal for the item
+         * 
+         */
+	public static function ReceiveSignal(WFCase\WFCaseItem $caseItem,$signalName,$signalData)
+        {
+                $task=self::getTask($caseItem);
+                $task->ReceiveSignal($caseItem,$signalName,$signalData);
+            
+        }
+	/*
+         *  SaveData
+         *  scenario 1:    is called when a user form is saved
+         * 
+         */
+	public static function SaveData(WFCase\WFCaseItem $caseItem,$values,$newStatus= enum\StatusTypes::Updated)
 	{
         Context::Log(INFO, 'API::Run id:'.$caseItem.id.'  values: '.print_r($values,true));
-		
+
+                $task=self::getTask($caseItem);
+                
+		$task->SaveData($caseItem,$values,$newStatus);
+	}
+        private static function getTask($caseItem)
+        {
 		$case= $caseItem->case;
 		$proc=$case->proc;
                 
@@ -122,54 +134,61 @@ class TaskSvc
                         $caseId=$case->caseId;
                         $itemId=$caseItem.id;
 			Context::Log(ERROR,"Error task not found for $taskId in Case $caseId - $itemId");
-			return false;
+			return null;
 		}
-		$task->SetValues($caseItem,$values);
-	}
+            return $task;
+        }
+        /*
+         *  is called when the timer is due
+         */
+	public static function TimerDue(WFCase\WFCaseItem $item)
+        {
+                $task=self::getTask($item);
+                
+		$task->TimerDue($item);
+            
+        }
+    public static function Invoke($caseId,$itemId)
+    {
+       
+        WFCase\WFCaseItemStatus::$Notes='Task Executing invoked from url';
+        
+	$case=WFCase\WFCase::LoadCase($caseId);
+	$proc=$case->proc;
+	$item = $case->getItem($itemId);
+        
+	$taskId = $item->processNodeId;
+	$task = $proc->getItemById($taskId);
+        
+        $task->Invoke($item);
 
-	public static function Complete(WFCase\WFCaseItem $item,$values=null)
-	{
-		Context::Log(INFO, 'API::Run id:'.$item->id.' values: '.print_r($values,true));
-		
-		$case= $item->case;
-		$proc=$case->proc;
-		
-		$taskId = $item->processNodeId;
-		
-		$task = $proc->getItemById($taskId);
-		if ($task==null)
-		{
-			Context::Log(ERROR,"Error task not found for $taskId in Case $caseId - $itemId");
-			return false;
-		}
-		$task->Complete($item,$values);
-		
-		return $case;
-	}
+        return $item;
+        
+    }
+        
+        // todo : remove 
+    /*
+    public static function Complete(WFCase\WFCaseItem $item,$values=null)
+    {
+            Context::Log(INFO, 'API::Run id:'.$item->id.' values: '.print_r($values,true));
+
+            $case= $item->case;
+            $proc=$case->proc;
+
+            $taskId = $item->processNodeId;
+
+            $task = $proc->getItemById($taskId);
+            if ($task==null)
+            {
+                    Context::Log(ERROR,"Error task not found for $taskId in Case $caseId - $itemId");
+                    return false;
+            }
+            $task->Complete($item);
+
+            return $case;
+    } */
 }
-Class Tester
-{
-    public function StartProcess($processName)
-    {
-        
-    }
-    public function SimulateUser($userId)
-    {
-        
-    }
-    public function SimulateRole($roleName)
-    {
-        
-    }
-    public function SimulateUserGroup($userGroup,$userScope=null)
-    {
-        
-    }
-    public function InvokeTask($taskId)
-    {
-        
-    }
-}
+
 Class CaseSvc
 {
 	public static function LoadCase($caseId)

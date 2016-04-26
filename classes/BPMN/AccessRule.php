@@ -1,13 +1,22 @@
 <?php
 
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- * 
- * 
- * 
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 namespace OmniFlow\BPMN;
 
@@ -37,14 +46,14 @@ class AccessRule extends \OmniFlow\WFObject
  var $asActor;         // defines a new Role for the user
  var $workScopeType;
  var $workScopeVariable;
- var $condition;    // null 
+ var $canChange;    // Can the Assignee Change the Assignment by Release or Re-Assign
  
- public static function CanPerform(\OmniFlow\BPMN\ProcessItem $processItem)
+ public static function getRule(\OmniFlow\BPMN\ProcessItem $processItem)
  {
         $user=  \OmniFlow\Context::getuser();
         
         foreach($processItem->proc->accessRules as $rule) {
-            if ($rule->nodeId == $processItem->id) {
+            if (($rule->nodeId == $processItem->id) || ($rule->nodeId == '__Process__')) {
                 
                 if ($user->isMemberOf($rule->userGroup,$rule->workScopeType,$rule->workScope))
                 {
@@ -52,11 +61,25 @@ class AccessRule extends \OmniFlow\WFObject
                     {
                         $user->asCaseActor=$rule->asActor;
                     }
-                    return true;
+                    return $rule;
                 }
             }
         }
-        return false;
+        return null;
+ }
+ public static function getAuthorizedGroups(\OmniFlow\BPMN\ProcessItem $processItem)
+ {
+//   $authorizedGroups=  BPMN\NotificationRule::getAuthorizedGroups($item);
+     $authorizedGroups=",";
+        foreach($processItem->proc->accessRules as $rule) {
+            if (($rule->nodeId == $processItem->id) || ($rule->nodeId == '__Process__'))
+                {
+                $authorizedGroups.=$rule->userGroup.',';
+            }
+        }
+        
+        return $authorizedGroups;
+     
  }
  public static function Validate(\OmniFlow\BPMN\ProcessItem $processItem)
  {
@@ -73,7 +96,8 @@ class AccessRule extends \OmniFlow\WFObject
  }
 
  /*
-  * Calculate Assignment for a task
+  * Calculate Assignment for a task done on the start of the task; to allow users to access it
+  * 
   */
  public static function AssignTask(\OmniFlow\BPMN\ProcessItem $processItem,\OmniFlow\WFCase\WFCaseItem $caseItem)
  {
@@ -89,7 +113,7 @@ class AccessRule extends \OmniFlow\WFObject
                     $users=  \OmniFlow\WFCase\Assignment::getUsersForActor($caseItem, $rule->actor);
                     foreach($users as $user)
                     {
-                        $rule->CreateAssignment($caseItem,$user);
+                        $rule->CreateAssignment($caseItem,$user,$rule->actor);
 
                     }
 
@@ -105,7 +129,7 @@ class AccessRule extends \OmniFlow\WFObject
  /*
   *     create a new Assignment record for this rule
   */
- public function CreateAssignment(\OmniFlow\WFCase\WFCaseItem $caseItem,$userId=null)
+ public function CreateAssignment(\OmniFlow\WFCase\WFCaseItem $caseItem,$userId=null,$asActor=null)
  {
      $a=new \OmniFlow\WFCase\Assignment($caseItem);
      
@@ -113,9 +137,11 @@ class AccessRule extends \OmniFlow\WFObject
      $a->caseId=$caseItem->caseId;
      $a->caseItemId=$caseItem->id;
      $a->privilege=$this->privilege;
-     
+     $a->canChange=$this->canChange;
      if ($userId!==null) {
          $a->userId=$userId;
+         $a->userName= \OmniFlow\WFUser\User::getUserById($userId)->name;
+         $a->asActor=$asActor;
      }
      else {
         $a->actor=$this->actor;

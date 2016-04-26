@@ -1,10 +1,22 @@
 <?php
 
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 namespace OmniFlow;
 
@@ -43,85 +55,19 @@ class DesignerController extends Controller{
          $v=new ExpressionDebugSymfonyView();
         $v->execute();
     }
-    public function Action_validate($req)
-    {
-	$file=$req["file"];
-	$proc=BPMN\Process::Load($file,true);
-        
-        $proc->Validate();
-    }
-    public function Action_getJson($req)
-    {
-	header('Content-Type: application/json');
 
-	$file=$req["file"];
-	$proc=BPMN\Process::Load($file,true);
-		
-	$json=$proc->getJson();
-                
-	Context::Log(INFO,'json '.$json);
-	Context::Log(INFO,'json error'.json_last_error());
-		echo $json;
+    public function Check_editTimer($req)
+    {
+        return true;
     }
     public function Action_editTimer($req)
     {
 	$v2=new EditTimerView();
+	$v2->header();
 	$v2->display();
-        
-    }
-    public function Action_describe($req)
-    {
-	$file=$req["file"];
-	$proc=BPMN\Process::Load($file,true);
-	$v2=new ProcessView();
-        
-        $localMenus=array();
-        $localMenus[]=array("process.test&file=".$file, "Simulate>","");
-        $localMenus[]=array("local.cancel", "Cancel","cancelChanges();return;");
-        $localMenus[]=array("local.saveJson", "Save","saveJson();return;");
-        $localMenus[]=array("local.validate", "Validate","validate();return;");
-        $localMenus[]=array("local.examine", "Examine","debugWindow(procJson);;return;");
-        $localMenus[]=array("modeler.edit&file=".$file, "Back to Model","");
-
-        $v2->header(true,false,$localMenus);
-	$v2->DescribeProcess($proc,$file);
         $v2->endPage();
-       
+        
     }
-    public function Action_register($req) {
-		$file=$req["file"];
-		$proc=BPMN\Process::Load($file,true);
-		$db=new ProcessModel();
-		$db->Register($proc);
-    }		
-    public function Action_unregister($req) {
-        $file=$req["file"];
-        $proc=BPMN\Process::Load($file,true);
-	$db=new ProcessModel();
-        $db->unRegister($file);
-    }		
-
-    public function Action_saveJson($req) {
-//		header('Content-Type: application/json');
-
-		$file=$req["file"];
-		$json=$req["json"];
-                
-                $jsonData=html_entity_decode($json);
-                $jsonData = str_replace("\\", "",$jsonData);
-                $jsonData=  json_decode($jsonData,true);
-                
-                $jsonError=  Helper::getJsonError();
-                if ($jsonError!='')
-                {
-		Context::Log(INFO,'json '.var_export($json,true));
-		Context::Log(INFO,'json_decode '.var_export($jsonData,true). ' Json Error:'.$jsonError);
-                }
-		$proc=BPMN\Process::Load($file,true);
-
-                ProcessExtensions::LoadExtensionFromJson($proc, $jsonData);
-                ProcessExtensions::saveExtensions($proc);
-                
-		}
-
 }
+ 
+ 

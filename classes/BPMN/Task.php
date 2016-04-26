@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,14 +48,46 @@ class Task extends Node
 		}
 		return;
 	}
-	public function describe()
+	public function describe(\OmniFlow\Describer $t)
 	{
-	
-		return parent::describe();
+            $t->desc="Work that needs to be perfomed in a Process.";
+            $t->designOptions=array("Define Action");
+            
+            switch($this->type)
+            {
+                case 'sendTask':
+                    $t->title="Send Task";
+                    $t->checkSubItem($this);
+                    $t->designOptions=array("Define Action","Map message data");
+                    break;
+                case 'receiveTask':
+                    $t->title="Receive Task";
+                    $t->checkSubItem($this);
+                    $t->designOptions=array("Define Action","Map message data");
+                    break;
+                case 'userTask':
+                    $t->title="User Task";
+                    $t->designOptions=array("Define Action",  OmniFlow\KW::acl);
+                    $t->completion=OmniFlow\KW::manualComplete;
+                    break;
+                case 'serviceTask':
+                    $t->title="Service Task";
+                    break;
+                case 'manualTask':
+                    $t->title="Manual Task";
+                    $t->completion=OmniFlow\KW::manualComplete;
+                    break;
+                case 'scriptTask':
+                    $t->title="Script Task";
+                    break;
+                default:
+                    $t->title="Task";
+                    break;
+            }
 	}
 	function NeedToWait(WFCase\WFCaseItem $caseItem,$input,$from)
         {
- 		OmniFlow\Context::Log(LOG,"Checking wait for Node: class:Task type: $this->type - $this->label - $this->id $this->actionScript");
+ 		OmniFlow\Context::Log(LOG,"Checking wait for Node: class:Task type: $this->type -From: $from $this->label - $this->id $this->actionScript");
             
 		if ($this->type=="receiveTask")
 		{
@@ -82,29 +114,50 @@ class Task extends Node
             }
             return false;
         }
-	function Run(WFCase\WFCaseItem $caseItem,$input,$from)
+	protected function run(WFCase\WFCaseItem $caseItem,$input,$from)
 	{
  		OmniFlow\Context::Log(LOG,"Run Node: class:Task type: $this->type - $this->label - $this->id $this->actionScript");
                 
+                // following section is for userTask
+                switch($this->type)
+                {
+                    case 'userTask':
+                    if ($this->requiresAccessRules())
+                    {
+                        $privileges=WFCase\Assignment::getPrivileges($this, $caseItem);
 
-    		if ($this->requiresAccessRules())
-		{
-                    $this->checkAccessRules($caseItem);
-                    $caseItem->UserTake();
-    
-                 	$actionView=$caseItem->getActionView($postForm);
-                
-                        \OmniFlow\Context::Log(INFO,"actionView:$actionView");
+                        \OmniFlow\Context::debug("Task.run privileges : $privileges");
+                        $modify=false;
+                        if (in_array("T", $privileges)) {   // can take
+                            $modify=true;
+                            WFCase\Assignment::UserTake($this,$caseItem);
+                        } else {
+                            if (!in_array("V", $privileges))    // can View
+                               return WFCase\Assignment::NotAuthorized($this,$caseItem);
+                            
+                        }
+                    }
+                    $actionView=\OmniFlow\ActionManager::getActionView($caseItem,$postForm);
+                    
 
-                        if ($actionView===true)
-                                return true;	
-                            \OmniFlow\ActionManager::defaultForm($caseItem);
-                        return true;
-		}
+                    \OmniFlow\Context::Log(\OmniFlow\Context::INFO,"actionView:$actionView");
+
+                    if ($actionView===true)
+                        return false;	
+                    \OmniFlow\ActionManager::defaultForm($caseItem,$modify);
+                    return false;   // Form Task is not complete
+                    break;
+                    case 'sendTask':
+                        
+                        if (! $this->canSendMessages())    // let the msg flow do the work
+                            $this->IssueMessage($caseItem);
+                    break;
+                }
 		
 		if ($this->actionScript!="")
                 {
-			$ret=ActionManager::ExecuteAction($this->actionScript,$caseItem);
+                    // change here
+			$ret=  \OmniFlow\ActionManager::ExecuteAction($this->actionScript,$caseItem);
                 }
 		
 		if ($this->customFunction!="")

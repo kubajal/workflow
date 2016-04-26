@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,40 +39,26 @@ use OmniFlow\WFCase;
 
  */	
 	/// <summary>
+        //  inclusiveGateway and eventBasedGateway
 	/// Start:    All Active in-flows need to be completed
 	/// End:      any out-flows will be executed based on input
 	/// </summary>
 	class ORGateway extends Gateway
 	{
-		public function Start(WFCase\WFCaseItem $caseItem,$input,$from)
+        	protected function start(WFCase\WFCase $case,$input,$from)
 		{
-			foreach ($this->inflows as $flow)
-			{
-//                          TODO:  check if inflow is complete by checking CaseItem
-                            $case=$caseItem->case;
-                            $srcNode=$flow->fromNode->id;
-                            if ($from->processNodeId == $srcNode)   // calling item, must have completed
-                                continue;
-                            $srcItem=$case->getItemByProcessId($srcNode); // never started OK
-                            if ($srcItem==null)
-                                continue;
-                            $status =$scrItem->status;
-                            
-				if ($status != \OmniFlow\enum\StatusTypes::Completed && $Status != \OmniFlow\enum\StatusTypes::Terminated)
-				{
-					//this.proc.wait(this);
-					return false;
-				}
-			}
+                    if ($this->CheckAllInflowsComplete($case, $input, $from))
 			return true;
+                    else
+                        return false;
 		}
 	
-		public function Run(WFCase\WFCaseItem $caseItem,$input,$from)
+		protected function run(WFCase\WFCaseItem $caseItem,$input,$from)
 		{
 			return true;
 		}
 	
-		public function Finish(WFCase\WFCaseItem $caseItem,$input,$from)
+		protected function finish(WFCase\WFCaseItem $caseItem,$input,$from)
 		{
 			foreach ($this->outflows as $flow)
 			{
@@ -80,5 +66,16 @@ use OmniFlow\WFCase;
 			}
 			return true;
 		}
+	public function describe(\OmniFlow\Describer $t)
+	{
+		$t->title="Inclusive Gateway (OR)";
+		$t->desc="Controls the flow of the process.";
+		$t->start=  OmniFlow\KW::converge.' '.OmniFlow\KW::waitIncomingFlows;
+
+                $t->start=  OmniFlow\KW::converge.' '.OmniFlow\KW::waitIncomingFlows;
+		$t->completion=  OmniFlow\KW::diverge.' One or More flows will be executed based on their condition.';
+                
+                
+	}                
 
 	}

@@ -1,10 +1,22 @@
 <?php
 
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 namespace OmniFlow;
 
@@ -21,21 +33,7 @@ class DescriberObject
     public static function getTypes()
     {
         $list=array();
-// ----------------------	task   ---------------------- 
-		  
-		$t=new Describer(); 
-		$t->name="task";
-		$t->className="";
-		$t->xmlTag="";
-		$t->title="";
-		$t->desc="Work that needs to be perfomed in a Process.";
-		$t->start=KW::autoStart;
-		$t->completion=KW::autoComplete;
-		$t->designOptions=array("Define Action",KW::acl);
-		$t->modelOptions=array("More to come...");
-		   
-		
-		$list[$t->name]=$t;
+
 
 // ----------------------	userTask   ---------------------- 
 		 
@@ -43,12 +41,12 @@ class DescriberObject
 		$t->name="userTask";
 		$t->className="";
 		$t->xmlTag="";
-		$t->title="";
+		$t->title="User Task";
 		$t->desc="Work that needs to be perfomed in a Process.";
 		$t->start=KW::autoStart;
-		$t->completion=KW::autoComplete;
+		$t->completion=KW::manualComplete;
 		$t->designOptions=array("Define Action",KW::acl);
-		$t->modelOptions=array("More to come...");
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -58,12 +56,12 @@ class DescriberObject
 		$t->name="serviceTask";
 		$t->className="";
 		$t->xmlTag="";
-		$t->title="";
+		$t->title="Service Task";
 		$t->desc="Work that needs to be perfomed in a Process.";
 		$t->start=KW::autoStart;
-		$t->completion=KW::autoComplete;
+		$t->completion=KW::scriptComplete;
 		$t->designOptions=array("Define Action",KW::acl);
-		$t->modelOptions=array("More to come...");
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -74,11 +72,11 @@ class DescriberObject
 		$t->className="";
 		$t->xmlTag="";
 		$t->title="";
-		$t->desc="Work that needs to be perfomed in a Process.";
+		$t->desc="{ return 'Receives a message: '+item.message;}";
 		$t->start=KW::autoStart;
-		$t->completion=KW::autoComplete;
-		$t->designOptions=array("Define Action",KW::acl);
-		$t->modelOptions=array("More to come...");
+		$t->completion=KW::messageReceived;
+		$t->designOptions=array("Define Action","Map message data");
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -89,11 +87,11 @@ class DescriberObject
 		$t->className="";
 		$t->xmlTag="";
 		$t->title="";
-		$t->desc="Work that needs to be perfomed in a Process.";
+		$t->desc=KW::sendsMessage;
 		$t->start=KW::autoStart;
-		$t->completion=KW::autoComplete;
-		$t->designOptions=array("Define Action",KW::acl);
-		$t->modelOptions=array("More to come...");
+		$t->completion=KW::scriptComplete;
+		$t->designOptions=array("Define Action","Map message data");
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -106,9 +104,9 @@ class DescriberObject
 		$t->title="";
 		$t->desc="Work that needs to be perfomed in a Process.";
 		$t->start=KW::autoStart;
-		$t->completion=KW::autoComplete;
-		$t->designOptions=array("Define Action",KW::acl);
-		$t->modelOptions=array("More to come...");
+		$t->completion=KW::scriptComplete;
+		$t->designOptions=array("Define Action");
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -121,9 +119,9 @@ class DescriberObject
 		$t->title="";
 		$t->desc="Work that needs to be perfomed in a Process.";
 		$t->start=KW::autoStart;
-		$t->completion=KW::autoComplete;
+		$t->completion=KW::manualComplete;
 		$t->designOptions=array("Define Action",KW::acl);
-		$t->modelOptions=array("More to come...");
+		$t->modelOptions=array();
 		
 		
 		$list[$t->name]=$t;
@@ -135,10 +133,7 @@ class DescriberObject
 		$t->className="";
 		$t->xmlTag="";
 		$t->title="";
-		$t->desc="Start Event is the where the Process can start. <br />"
-                        . "{
-                         var nodes=JsonNodes('items.[node.type==''startEvent'']');
-                        if (nodes.length>1] return 'this process has '+nodes.length+ Start Events';}";
+		$t->desc="A starting point of the proces.";
 		$t->start=KW::manualStart;
 		$t->completion=KW::autoComplete;
 		$t->designOptions=array(KW::logic,KW::acl);
@@ -146,6 +141,49 @@ class DescriberObject
 		
 		$list[$t->name]=$t;
 
+		$t=new Describer(); 
+		$t->name="startEventmessage";
+		$t->className="";
+		$t->xmlTag="";
+		$t->title="";
+		$t->desc="A starting point of the proces.";
+		$t->start=KW::messageReceived;
+		$t->completion=KW::autoComplete;
+		$t->designOptions=array(KW::logic,KW::acl);
+		$t->modelOptions=array(KW::timer,KW::message,KW::signal);
+		
+		$list[$t->name]=$t;
+                
+
+		$t=new Describer(); 
+		$t->name="startEventsignal";
+		$t->className="";
+		$t->xmlTag="";
+		$t->title="";
+		$t->desc="A starting point of the proces.";
+		$t->start=KW::signalReceived;
+		$t->completion=KW::autoComplete;
+		$t->designOptions=array(KW::logic,KW::acl);
+		$t->modelOptions=array(KW::timer,KW::message,KW::signal);
+		
+		$list[$t->name]=$t;
+                
+                
+		$t=new Describer(); 
+		$t->name="startEventtimer";
+		$t->className="";
+		$t->xmlTag="";
+		$t->title="";
+		$t->desc="A starting point of the proces.";
+		$t->start="when a schedule time is due.";
+		$t->completion=KW::autoComplete;
+		$t->designOptions=array(KW::logic);
+		$t->modelOptions=array(KW::timer,KW::message,KW::signal);
+		
+		$list[$t->name]=$t;
+
+                
+                
 // ----------------------	endEvent   ---------------------- 
 		 
 		$t=new Describer(); 
@@ -153,7 +191,7 @@ class DescriberObject
 		$t->className="";
 		$t->xmlTag="";
 		$t->title="";
-		$t->desc="End Event is the where the Process Ends.";
+		$t->desc="where the Process Ends.";
 		$t->start=KW::autoStart;
 		$t->completion=KW::autoComplete;
 		$t->designOptions=array(KW::logic);
@@ -164,30 +202,59 @@ class DescriberObject
 // ----------------------	intermediateCatchEvent   ---------------------- 
 		 
 		$t=new Describer(); 
-		$t->name="intermediateCatchEvent";
+		$t->name="intermediateCatchEventmessage";
 		$t->className="";
 		$t->xmlTag="";
-		$t->title="";
-		$t->desc="End Event is the where the Process Ends.";
+		$t->title="Intermediate Event";
+		$t->desc="Receives a Message";
 		$t->start=KW::autoStart;
-		$t->completion=KW::autoComplete;
+		$t->completion=KW::messageReceived;
 		$t->designOptions=array();
-		$t->modelOptions=array("Terminate Event: Will terminate all running activities");
+		$t->modelOptions=array();
+		
+		$list[$t->name]=$t;
+
+// ----------------------	intermediateCatchEvent   ---------------------- 
+		 
+		$t=new Describer(); 
+		$t->name="intermediateCatchEventtimer";
+		$t->className="";
+		$t->xmlTag="";
+		$t->title="Intermediate Event";
+		$t->desc="Timer Event; will wait until the timer is due";
+		$t->start=KW::autoStart;
+		$t->completion=KW::timer;
+		$t->designOptions=array();
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
 // ----------------------	intermediateThrowEvent   ---------------------- 
-		 
+
 		$t=new Describer(); 
 		$t->name="intermediateThrowEvent";
 		$t->className="";
 		$t->xmlTag="";
-		$t->title="";
-		$t->desc="End Event is the where the Process Ends.";
+		$t->title="Intermediate Event";
+		$t->desc="No actions.";
 		$t->start=KW::autoStart;
 		$t->completion=KW::autoComplete;
 		$t->designOptions=array();
-		$t->modelOptions=array("Terminate Event: Will terminate all running activities");
+		$t->modelOptions=array();
+		
+		$list[$t->name]=$t;
+                
+                
+		$t=new Describer(); 
+		$t->name="intermediateThrowEventmessage";
+		$t->className="";
+		$t->xmlTag="";
+		$t->title="Intermediate Event";
+		$t->desc=KW::sendsMessage;
+		$t->start=KW::autoStart;
+		$t->completion=KW::autoComplete;
+		$t->designOptions=array();
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -197,12 +264,12 @@ class DescriberObject
 		$t->name="messageEvent";
 		$t->className="";
 		$t->xmlTag="";
-		$t->title="";
+		$t->title="Intermediate Event";
 		$t->desc="End Event is the where the Process Ends.";
 		$t->start=KW::autoStart;
 		$t->completion=KW::autoComplete;
 		$t->designOptions=array();
-		$t->modelOptions=array("More to come...");
+		$t->modelOptions=array();
 		
 		
 		$list[$t->name]=$t;
@@ -213,7 +280,7 @@ class DescriberObject
 		$t->name="exclusiveGateway";
 		$t->className="";
 		$t->xmlTag="";
-		$t->title="";
+		$t->title="Exclusive Gateway (XOR)";
 		$t->desc="Controls the flow of the process.";
 		$t->start=KW::autoStart;
 		$t->completion=KW::autoComplete. 
@@ -230,12 +297,12 @@ class DescriberObject
 		$t->name="inclusiveGateway";
 		$t->className="";
 		$t->xmlTag="";
-		$t->title="";
-		$t->desc="End Event is the where the Process Ends.";
+		$t->title="Inclusive Gateway(OR)";
+		$t->desc="Controls the flow of the process.";
 		$t->start=KW::autoStart;
 		$t->completion=KW::autoComplete;
 		$t->designOptions=array();
-		$t->modelOptions=array("More to come...");
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -245,12 +312,12 @@ class DescriberObject
 		$t->name="parallelGateway";
 		$t->className="";
 		$t->xmlTag="";
-		$t->title="";
-		$t->desc="End Event is the where the Process Ends.";
-		$t->start=KW::autoStart;
+		$t->title="Parallel Gateway (AND)";
+		$t->desc="Controls the flow of the process";
+		$t->start=KW::converge.' '.KW::waitIncomingFlows;
 		$t->completion=KW::autoComplete;
 		$t->designOptions=array();
-		$t->modelOptions=array("More to come...");
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -260,12 +327,12 @@ class DescriberObject
 		$t->name="eventBasedGateway";
 		$t->className="";
 		$t->xmlTag="";
-		$t->title="";
-		$t->desc="End Event is the where the Process Ends.";
+		$t->title="Event Based Gateway";
+		$t->desc="Controls the flow of the process.";
 		$t->start=KW::autoStart;
-		$t->completion=KW::autoComplete;
+		$t->completion="Waits of the completion of any of children events";
 		$t->designOptions=array();
-		$t->modelOptions=array("More to come...");
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -276,11 +343,11 @@ class DescriberObject
 		$t->className="";
 		$t->xmlTag="";
 		$t->title="";
-		$t->desc="End Event is the where the Process Ends.";
+		$t->desc="Controls the flow of the process";
 		$t->start=KW::autoStart;
 		$t->completion=KW::autoComplete;
 		$t->designOptions=array();
-		$t->modelOptions=array("More to come...");
+		$t->modelOptions=array();
 		
 		$list[$t->name]=$t;
 
@@ -307,9 +374,10 @@ class DescriberObject
 		$t->xmlTag="";
 		$t->title="";
 		$t->desc="Defines (the sequence) of flow between activites";
-		$t->start="Only if the specified condition is met.";
+		$t->start="{if (item.condition===''||item.condition===null) return '';
+                        return 'Only if <b>'+item.condition+'</b>';}";
 		$t->completion=KW::autoComplete;
-		$t->designOptions=array(KW::condition);
+		$t->designOptions=array(KW::condition,"Defines Case Status");
 		$t->modelOptions=array();
                 
 		$list[$t->name]=$t;
@@ -326,10 +394,23 @@ class DescriberObject
  * @author ralph
  */
 class KW {
-    const manualStart="Manually Start";
-    const autoStart="When any incoming flow arrives";
-    const manualComplete="When an authorized user designates the task to be complete.";
-    const autoComplete="Completes as soon as it arrives";
+    const manualStart="manually (authorized users invokes this event)";
+    const converge="If Converging:";
+    const diverge="If Diverging:";
+    const waitIncomingFlows="waits for all incoming flows to complete";
+    const autoStart="";//"When any incoming flow arrives";
+    const manualComplete="when an authorized user designates the task to be complete.";
+    const autoComplete="";//"Completes as soon as it arrives";
+    const scriptComplete="when the action completes";
+    const messageReceived="{
+            var msg=item.message;
+            if (msg==null) msg='undefined';
+            return 'when a message: '+msg+' is received';}";        
+    const sendsMessage="{
+            var msg=item.message;
+            if (msg==null) msg='undefined';
+            return 'Sends a message: '+msg;}";        
+    const signalReceived="when specified signal is received";
     const logic="Custom Logic can be added";
     const condition="Logical Condition";
     const acl="User Access is controlled";
@@ -341,8 +422,10 @@ class KW {
 class Describer {
     
    var $name;
+   var $id;
    var $title;
    var $desc;
+   var $userDoc;
    var $start=KW::autoStart;
    var $completion=KW::autoComplete;
    var $designOptions;
@@ -352,7 +435,7 @@ class Describer {
    var $xmlTag;
   
   
-   public static function getProcessDescription(Process $proc)
+   public static function getProcessDescription(BPMN\Process $proc)
    {
         $descs=  DescriberObject::getTypes();
         
@@ -362,6 +445,54 @@ class Describer {
         }
 
         return $descs;
+   }
+   public function checkSubItem($processItem)
+   {
+                $sender=  BPMN\ProcessItem::isSenderType($processItem->type);
+                if ($processItem->type=='endEvent')
+                    $sender=true;
+                if ($processItem->type=='startEvent')
+                    $sender=false;
+
+                $msg='';
+                $type=$processItem->subType;
+                
+                
+       		if ($processItem->hasMessage) {
+                    
+                    $msg=$processItem->message;
+                    $type='message';
+                }
+		if ($processItem->hasSignal) {
+                    $msg=$processItem->signalName;
+                    $type='signal';
+                }
+		if ($processItem->hasTimer) {
+                    $type='timer - '.$processItem->timerType;
+                    $msg=$processItem->timer;
+                }
+                
+                if ($msg==null)
+                        $msg="to be defined";
+
+                if ($type=='')
+                    return;
+                // starts
+                if ($processItem->type=='startEvent')
+                {
+                    $this->start="will wait for a $type of type '$msg' before starting";
+                    
+                } elseif ($sender) {
+                // Sends
+                    $this->desc.="will send a $type of type '$msg'";
+                } elseif ($type=='') {
+                    
+                } else {
+                // Receives
+                    $this->completion="will wait for a $type of type '$msg'";
+                    
+                }
+       
    }
 }
 

@@ -83,11 +83,16 @@ class CaseItemModel extends OmniModel
 				`timerRepeat` varchar(45) DEFAULT NULL,
 				`timerDue` datetime DEFAULT NULL,
 				`message` varchar(45) DEFAULT NULL,
-				`messageKeys` varchar(450) DEFAULT NULL,
+				`messageKey` varchar(450) DEFAULT NULL,
 				`signalName` varchar(45) DEFAULT NULL,
 				`itemValues` varchar(4500) DEFAULT NULL,
 				`caseStatus` varchar(45) DEFAULT NULL,
 				`caseStatusDate` datetime DEFAULT NULL,
+                                `subProcessId` int(11) DEFAULT NULL,
+                                `parentId` int(11) DEFAULT NULL,
+				`priority` varchar(45) DEFAULT NULL,
+				`deadline` datetime DEFAULT NULL,
+				`effort` varchar(45) DEFAULT NULL,
 				`notes` varchar(450) DEFAULT NULL,
 				`created` datetime DEFAULT NULL,
 				`updated` datetime DEFAULT NULL,
@@ -96,21 +101,5 @@ class CaseItemModel extends OmniModel
 		) ENGINE=InnoDB AUTO_INCREMENT=122 DEFAULT CHARSET=utf8;";
         return $table;
     }
-    /*
-     * locates and returns the CaseItem that responds to the message with the key values
-     * 
-     */
-    public  function locateMessageItem($messageName,$keyValues)
-    {
-        $table=$this->getTable();
-        $messageKeys=  serialize($keyValues);
 
-        $rows=$this->db->select("select id,caseId 
-                from $table 
-                where status not in ('Completed','Terminated')
-                and message = '$messageName'
-                and messageKeys = '$messageKeys'
-                ");       
-        return $rows;
-    }
 }

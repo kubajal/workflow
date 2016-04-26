@@ -19,10 +19,10 @@ class caseItemStatusModel extends OmniModel
         return $this->db->getPrefix()."wf_caseItemStatus";
     }
 
-    public function insert(WFCase\WFCaseItem $item)
+    public function insert(WFCase\WFCaseItemStatus $item)
 	{
 		
-		$item->started=date("Y-m-d H:i:s");
+		$item->statusDate=date("Y-m-d H:i:s");
 		
 		$data=$item->__toArray();
 
@@ -60,6 +60,7 @@ class caseItemStatusModel extends OmniModel
 				`userId` varchar(45) DEFAULT NULL,
 				`actor` varchar(45) DEFAULT NULL,
 				`status` varchar(45) DEFAULT NULL,
+				`notes` varchar(245) DEFAULT NULL,
 				`statusDate` datetime DEFAULT NULL,
 				PRIMARY KEY (`id`),
 				KEY `idx_wf_caseitemstatus_caseId` (`caseId`,`itemId`)

@@ -1,4 +1,22 @@
 <?php
+
+/*
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 namespace OmniFlow;
 
 class Helper
@@ -11,14 +29,14 @@ class Helper
 			if (function_exists('wp_enqueue_script'))
 				return;
 		}
+                $scripts=array();
 		$styles=array();
-		$styles[]=array('workflow',"css\workflow.css");
-		$styles[]=array('jquery-ui',"lib/jquery-ui/jquery-ui.css");
-		$styles[]=array('jquery-ui-theme',"lib/jquery-ui/jquery-ui.theme.css");
-		
+                
 		$styles[]=array('bootstrap',"lib/bootstrap/bootstrap.min.css");
 		$styles[]=array('bootstrap-theme',"lib/bootstrap/bootstrap-theme.min.css");
+                $scripts[]=array('bootstrap',"lib/bootstrap/bootstrap.min.js",array( 'jquery' ));
                 
+		$scripts[]=array('dhtmlx',"dhtmlx/codebase/dhtmlx.js");
 		$styles[]=array('dhtmlx',"dhtmlx/codebase/dhtmlx.css");
 		$styles[]=array('dhtmlx-DS',"dhtmlx/codebase/datastore.js");
 		$styles[]=array('dhtmlx-skin',"dhtmlx/skins/skyblue/dhtmlx.css");
@@ -30,16 +48,19 @@ class Helper
 		$styles[]=array('app',"css/app.css");
                 }
 		
-		$scripts=array();
-		$scripts[]=array('jquery',"js/jquery.min.js");
+//		$scripts[]=array('jquery',"js/jquery.min.js");
 		$scripts[]=array('jquery-ui',"lib/jquery-ui/jquery-ui.min.js");
+		$styles[]=array('jquery-ui',"lib/jquery-ui/jquery-ui.css");
+		$styles[]=array('jquery-ui-theme',"lib/jquery-ui/jquery-ui.theme.css");
+                
 		$scripts[]=array('jquery-isloading',"js/jquery.isloading.min.js");
+		$scripts[]=array('jquery-validate',"lib/jquery.validate.min.js");
+                
+		$styles[]=array('workflow',"css\workflow.css");
 		$scripts[]=array('workflow',"js/workflow.js");
 		$scripts[]=array('workflow-json',"js/jsonHelper.js");
 		$scripts[]=array('workflow-editor',"js/processEditor.js");
 		$scripts[]=array('workflow-case',"js/caseView.js");
-		$scripts[]=array('dhtmlx',"dhtmlx/codebase/dhtmlx.js");
-                $scripts[]=array('bootstrap',"lib/bootstrap/bootstrap.min.js");
                 
 		
 		if ($file!='')  // From WordPress
@@ -48,7 +69,7 @@ class Helper
 			{
 				wp_enqueue_script(
 						$script[0],
-						plugins_url( $script[1] , $file));
+						plugins_url( $script[1] , $file),array( 'jquery' ));
 			}
 
 			foreach($styles as $style)
@@ -58,9 +79,6 @@ class Helper
 						plugins_url( $style[1], $file));
 			}
                         
-                    echo '<script>
-                        var omni_base_url="'.Context::getInstance()->omniBaseURL.
-                        '";</script>';
 		}
 		else    // Without WordPress
 		{
@@ -73,16 +91,30 @@ class Helper
 			{
 				echo "<link rel='stylesheet' href='$style[1]' type='text/css'>";
 			}
+
+		}
+	}
+
+        public static function BasicJS()
+        {
+		if (Context::getInstance()->fromWordPress)
+		{
+                        
+                    echo '<script>
+                        var omni_base_url="'.Context::getInstance()->omniBaseURL.
+                        '";</script>';
+		}
+		else    // Without WordPress
+		{
 			// no wordPress
 			echo '
 				<script>
                                 var omni_base_url=""; 
 				var ajax_object =null;					
 				</script>';
-
 		}
-	}
-
+            
+        }
 	public static function ItemRef(BPMN\ProcessItem $processItem)
 	{
 		return "<a class='processItem' href='#' itemId='".$processItem->id."'>".
@@ -116,6 +148,20 @@ class Helper
 
 		*/
 
+	public static function getAjaxUrl($options)
+	{
+		//$url=strtok($_SERVER["REQUEST_URI"],'action=');
+            
+                $url = admin_url().'/admin-ajax.php?action=omni_ajax'; 
+                $firstMarker="&";
+
+
+		foreach($options as $opt=>$val)
+		{
+			$url.=$firstMarker.$opt.'='.$val;
+		}
+		return $url;
+	}
 	public static function getUrl($options)
 	{
 		//$url=strtok($_SERVER["REQUEST_URI"],'action=');

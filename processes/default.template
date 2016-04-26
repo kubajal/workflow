@@ -1,0 +1,33 @@
+itemTitle=_case.getItem(notification.caseItemId)['label'];
+
+
+
+setOutput("subject");
+<< Omni-Workflow Notification {{itemTitle}} is {{notification.getEventTitle()}} for Case# {{notification.caseId}} >>
+setOutput("message");
+output("testing Body");
+<< Message is here  
+
+id:    {{notification.id}}
+ruleId:    {{notification.ruleId}}
+
+userType:    {{notification.userType}}   // User , Group, Actor , assigN users
+userId:    {{notification.userId}}
+userGroup:    {{notification.userGroup}}
+actor:    {{notification.actor}}
+    
+caseId:    {{notification.caseId}}
+Item:    {{notification.caseItemId}}    // if null valid for entire case
+    
+eventType:    {{notification.eventType}}     //  Start , Completion , Unassigned work, Error  
+event:			{{notification.getEventTitle()}}
+date:    {{notification.eventDate}}
+due:    {{notification.dueOn}}
+    
+    {{notification.cancelDate}}
+status:    {{notification.status}}
+seq:    {{notification.repeatSequence}}    // nTh time this being issued
+
+CaseItem:  {{itemTitle}}
+	
+    >>

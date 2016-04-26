@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,34 +33,6 @@ class DataElement extends \OmniFlow\WFObject
 	var $dataType;
 	var $validValues;
         var $req;
-/*
-	public static function fromXML($node)
-	{
-            $de=new DataElement();
-            $de->__fromXML($node);
-            return $de;
-	}
-	public static function fromArray($arr)
-	{
-            $de=new DataElement();
-		$de->id=$arr['id'];
-		$de->name=$arr['name'];
-		$de->title=$arr['title'];
-		$de->dataType=$arr['dataType'];
-		$de->validValues=$arr['validValues'];
-		$de->req=$arr['req'];
-            return $de;
-	}
-        
-        public function toXML($node)
-        {
-            $node->addAttribute('id',$this->id);
-            $node->addAttribute('name',$this->name);
-            $node->addAttribute('title',$this->title);
-            $node->addAttribute('description',$this->description);
-            $node->addAttribute('dataType',$this->dataType);
-            $node->addAttribute('validValues',$this->validValues);
-            $node->addAttribute('req',$this->req);
+        var $options;
 
-        }*/
 }

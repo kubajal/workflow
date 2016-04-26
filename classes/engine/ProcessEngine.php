@@ -3,138 +3,6 @@ namespace OmniFlow
 {
 
 
-/*
- * defines public interface to
- */
-Interface iProcessItemExecutable
-{
-	function willWait();
-	function checkWait();
-	function getExecutingOutflows();
-	function do_start();
-	function do_execute();
-	function do_complete();
-	
-}
-/*
-	Class responsibilities:
-	
-		all execute runtime functions
-		
-		managing interface with CaseItem
-		
-		dataElement
-		
-		notification
-		
-		
-*/
-class ProcesssExecutor
-{
-	/* can be called by API and custom code to force a start of step
-	 *
-	 */
-	private $process;
-	private $processItem;
-	private $case;
-	private $caseItem;
-	//	======================= pulbic functions are all static ==============================
-
-	public static function StartProcess(Process $process)
-	{
-		// to do create new case
-
-		$startItem = $process->getStartNode();
-		self::RunProcessItem($startItem, $newCase);
-
-	}
-	public static function RunProcessItem(ProcessItem $item,WFCase\WFCase $case)
-	{
-		$exec=new self();
-		$exec->process=$item->proc;
-		$exec->case=$case;
-		$exec->initialize();
-
-	}
-	public static function ContinueProcessItem(WFCase\WFCaseItem $caseItem,$data,StatusTypes $newStatus)
-	{
-
-	}
-	public static function TerminateProcessItem(WFCase\WFCaseItem $caseItem,$data)
-	{
-
-	}
-	public static function CancelCase(WFCase\WFCase $case,string $reason)
-	{
-
-	}
-
-	// ------------------------------------------------------------
-
-	private function initialize()
-	{
-
-		$this->start();
-	}
-
-	private function start()
-	{
-		// set the caseItem
-		$caseItem= WFCase\WFCase::createItemHandler($case,$this->proc, $this);
-			
-		Context::Log(LOG,"**ProcessIterm Executing: $this->type - $this->label - $this->id -input=$input" );
-
-		$this->processItem->do_start();
-		
-		
-		if ($this->processItem->willWait())
-		{
-			return;
-		}
-		else
-		{
-			$this->execute();
-		}
-	}
-
-	private function resume()
-	{
-
-
-		if ($this->processItem->checkWait())
-		{
-			return;
-		}
-		else
-		{
-			$this->execute();
-		}
-
-	}
-	private function execute()
-	{
-		$this->processItem->do_execute();
-		
-		$this->complete();
-	}
-
-	private function complete()
-	{
-		$this->processItem->do_complete();
-
-		$outs=$this->processItem->getExecutingOutflows();
-		foreach($outs as $flow)
-		{
-			self::RunProcessItem($flow, $case);
-		}
-	}
-	private function notify()
-	{
-	}
-	private function setStatus()
-	{
-	}
-}
 class ActionManager
 {
 	public static function ExecuteAction($_script,WFCase\WFCaseItem $_caseItem)
@@ -142,22 +10,19 @@ class ActionManager
 		$_ret=null;
                 $_case=$_caseItem->case;
                 
-		Context::Log(INFO,"ExecutingCondition script:'.$_script");
+		Context::Log(INFO,"Executing Action script:'.$_script");
 		
-		foreach($_case->values as $_var=>$_value)
-		{
-			$$_var=$_value;
-			Context::Log(INFO,'variable:'.$$_var.'='.$_value);
-		}
 	
 		try
 		{
-                    $_ret=eval($_script);
-                        
-                    foreach($_case->values as $_var=>$_value)
+                    $eng=ScriptEngine::Evaluate($_script, $_case,$_caseItem);
+                    $_ret=$eng->result;
+                    foreach($eng->vars as $k=>$v)
                     {
-                            $_case->values[$_var]=$$_var;
-                            Context::Log(INFO,'variable:'.$_var.'='.$$_var);
+                        if (isset($_case->values[$k])) {
+                            $_case->values[$k]=$v;
+                        }
+                        
                     }
                         
 		}
@@ -216,23 +81,23 @@ class ActionManager
                 
                 if ($item->status===\OmniFlow\enum\StatusTypes::Completed)
                 {
-//                   throw new \Exception("Task is already Completed.");
+                  throw new \Exception("Task is already Completed.");
                 }
 		if (isset($post['_complete']))
 			{
-	   		TaskSvc::Complete($item, $post);
+	   		$newStatus= enum\StatusTypes::Completed;
 			}
                 else {
-        		TaskSvc::SaveData($item, $post);
+	   		$newStatus= enum\StatusTypes::Updated;
+                }
+                    
+                TaskSvc::SaveData($item, $post,$newStatus);
 	
-                 }
-		
-                
                 return $case;
 	}
-	public static function defaultForm(WFCase\WFCaseItem $item)
+	public static function defaultForm(WFCase\WFCaseItem $item,$edit)
 	{
-            FormView::defaultForm($item);
+            FormView::defaultForm($item,$edit);
 	}	
 	public static function getActionView(WFCase\WFCaseItem $caseItem,$postForm)
 	{

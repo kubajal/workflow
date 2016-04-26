@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,6 +64,10 @@ abstract class WFSubTypes
 	const	TERMINATION_TYPE="terminate";
 	const	ERROR_TYPE="error";
 	const	ESCALATION_TYPE="escalation";
+	const	COMPENSATE_TYPE="compensate";
+	const	CONDITIONAL_TYPE="conditional";
+	const	LINK_TYPE="link";
+	const	CANCEL_TYPE="cancel";
         
         // add task sub types here
         
@@ -82,45 +86,30 @@ class ProcessMessasge
         var $variables;
 }
 
-
-class SubProcess extends OmniFlow\WFObject
-{
-    var $id;
-    var $name;
-    var $implementation;
- public function isExecutable()
- {
-     if ($this->implementation=='no')
-         return false;
-     else
-         return true;
- }
-}
 class Process extends OmniFlow\WFObject
 {
 	static $WorkFlowListeners=Array();
 	
-	var $name;
+        var $processId;
 	var $processName;
         var $title;
 	var $items = Array();
-	private $listeners = Array();
+	var $listeners = Array();
 	var $messages=Array();
-	var $subprocesses=Array();
+	var $pools=Array();
 	var $errors=Array();
 	var $dataElements=Array();
 	var $actors=Array();
         var $accessRules=array();
         var $notificationRules=array();
-
+        var $status;        /* Active , Inactive */
 
 	/*
 	 * 
 	 */
-	function __construct($fullname)
+	function __construct($processId)
 	{
-		$this->name=$fullname;
-		$this->processName =$fullname;
+            $this->processId=$processId;
 
 	}
         /*
@@ -139,13 +128,20 @@ class Process extends OmniFlow\WFObject
                 {
                     $scripts[]=Array("nodeId"=>$nodeId,
                             "type"=>'condition',
-                    "script"=>$pitem->condition);
+                            "script"=>$pitem->condition);
                 }
                 if ($pitem->actionScript!=='' && $pitem->actionScript!=null)
                 {
                     $scripts[]=Array("nodeId"=>$nodeId,
                             "type"=>'action',
-                    "script"=>$pitem->actionScript);
+                            "script"=>$pitem->actionScript);
+                    
+                }
+                foreach($pitem->scripts as $scr)
+                {
+                    $scripts[]=Array("nodeId"=>$nodeId,
+                            "type"=>'action',
+                            "script"=>$scr);
                     
                 }
                 
@@ -167,7 +163,7 @@ class Process extends OmniFlow\WFObject
 			$accessRules[]=$iArr;
 			}
 
-		foreach($this->subprocesses as $sub)
+		foreach($this->pools as $sub)
 			{
 			$iArr=$sub->__toArray();
 			$subs[]=$iArr;
@@ -187,33 +183,77 @@ class Process extends OmniFlow\WFObject
 			$iArr=$ar->__toArray();
 			$notificationRules[]=$iArr;
 			}
-                        
+  
+		$eventsArr=  OmniFlow\enum\NotificationTypes::getScriptEvents();
+                
+                $site= \OmniFlow\Context::getSite();
+                $userRoles=$site->userRoles;
 		$arr=array();
 		$arr['items']=$items;
-                $arr['subprocesses']=$subs;
+                $arr['pools']=$subs;
 		$deTree=  \OmniFlow\DataManager::getMeta($this);
 		$arr['dataElements']=$deTree;
                 $arr['actors']=$actors;
 		$arr['accessRules']=$accessRules;
 		$arr['notificationRules']=$notificationRules;
-                $arr['descriptions']= \OmniFlow\Describer::getProcessDescription($this);
+                $arr['userRoles']= $userRoles;
+                $arr['scriptEvents']= $eventsArr;
 		
-                
-                $json=json_encode($arr);     
-                $err=json_last_error();
-                
-                $json2=json_encode(\OmniFlow\Helper::utf8ize($arr));
-                
-		return $json;
+                $arr['itemsDescription']= $this->Describe();
+
+                return $arr;
+
 	}
 	function Init()
 	{
-            $this->title=  str_replace(".bpmn", "",$this->name);
 		foreach($this->items as $item)
 		{
 			$item->Init();
 		}
 		
+                $sorted=Array();
+                $sortedIds=Array();
+                foreach($this->items as $item)
+                {
+                    if ($item->type=='startEvent')
+                    {
+                        if (!in_array($item->id, $sortedIds)) {
+                            $sorted[]=$item;
+                            $sortedIds[]=$item->id;
+                        }
+                        $p=0;
+                        while($p<count($sorted)) {
+                                $item=$sorted[$p++];
+                                foreach($item->outflows as $flow)
+                                {
+                                    $toNode=$flow->toNode;
+                                    if (!in_array($toNode->id, $sortedIds)) {
+                                       $sorted[]=$toNode;
+                                       $sortedIds[]=$toNode->id;
+                                    }
+                                }
+                        }
+                    }
+                }
+                foreach($this->items as $item)
+                {
+                    if (!$item->isFlow())
+                    {
+                      if (!in_array($item->id, $sortedIds)) {
+                                       $sorted[]=$item;
+                                       $sortedIds[]=$item->id;
+                                }
+                    }
+                    
+                }
+
+                $i=1;
+                foreach($sorted as $item)
+                {
+                  $item->seq=$i++;
+                }
+                
+                
 		foreach(Process::$WorkFlowListeners as $vproc=>$funct)
 		{
 			if (($vproc==$this->processName) || ($vproc=="*"))
@@ -244,10 +284,10 @@ class Process extends OmniFlow\WFObject
 		
 		$classFile=$conf->processPath.'/'.$fileName;
 //		echo $classFile;
-		OmniFlow\Context::Log(INFO,"AddClassListener: $className - $fileName $classFile");
+		OmniFlow\Context::Log(\OmniFlow\Context::INFO,"AddClassListener: $className - $fileName $classFile");
 		if (!file_exists($classFile))
 		{
-			OmniFlow\Context::Log(ERROR, "Class file does not exist $classFile");
+			OmniFlow\Context::Log(\OmniFlow\Context::ERROR, "Class file does not exist $classFile");
 			return;
 		}
 		include_once $classFile;
@@ -271,7 +311,7 @@ class Process extends OmniFlow\WFObject
 	}
 	public function AddListener($funct)
 	{
-		OmniFlow\Context::Log(INFO,"AddListener: $funct");
+		OmniFlow\Context::Log(\OmniFlow\Context::INFO,"AddListener: $funct");
 		$this->listeners[]=$funct;
 	}
 	public function Notify($procEvent,$processItem=null)
@@ -285,17 +325,21 @@ class Process extends OmniFlow\WFObject
 		}
 	
 	}
-	function getStartNode()
+	function getStartNode($testMode=false)
         {
             $nodes=array();
             foreach($this->items as $node)
             {
                     if ($node->type=="startEvent")
                     {
-                            if ($node->hasMessage == false && $node->hasTimer==false)
+                        
+                        $isManual=false;
+                        if ($node->hasMessage == false && $node->hasTimer==false)
+                            $isManual=true;
+                        if ( $isManual || $testMode)
                             {
-                                $sub=$node->getSubProcess();
-                                OmniFlow\Context::log(INFO,"start event subprocss".  var_export($sub,true).'end ');
+                                $sub=$node->getPool();
+                                OmniFlow\Context::log(\OmniFlow\Context::INFO,"start event pool".'end ');
                                 if ($sub->isExecutable())
                                 {
                                     $nodes[]=$node;
@@ -304,14 +348,6 @@ class Process extends OmniFlow\WFObject
                     }
             }		
             return $nodes;
-            
-            foreach($this->items as $node)
-            {
-                    if ($node->type=="startEvent")
-                    {
-                        return $node;
-                    }
-            }
 
         }
 	public function Start(WFCase\WFCase $case,$startNodeId=null)
@@ -340,29 +376,52 @@ class Process extends OmniFlow\WFObject
 	}
 	public function EndProcess(WFCase\WFCase $case,ProcessItem $item=null)
 	{
+                OmniFlow\Context::Debug("Process.EndProcess for case $case->caseId");
 		$this->Notify(OmniFlow\enum\NotificationTypes::ProcessCompleted);
 		$case->EndProcess($item);
 		
 	}
+        /*
+         *  used for subprocesses
+         * 
+         *  it sets the caseItem parentId to the calling item for subprocesses
+         */
+        public function checkParentId(WFCase\WFCase $case,$caseItem)
+        {
+            // check if subprocess
+            if ($this->isSubProcess===NULL) // has not been checked before
+            {
+                $this->isSubProcess=false;
+            }
+            if ($this->isSubProcess)
+            {
+                
+            }
+        }
 	public function Describe()
 	{
-		echo "<br /><hr />Describe process";
-//		Array sorted = items.OrderBy(o => o.Sequence).ToList<ProcessItem>();
-		echo '<table>';
+            $descs=Array();
 		foreach ($this->items as $item)
 		{
-			$msg=$item->describe();
-			
-			$msg='<tr><td>'.str_replace(":","</td><td>",$msg).'</tr>';
-			echo $msg;
+                    $t=new \OmniFlow\Describer(); 
+                    $t->id=$item->id;
+                    $t->className="";
+                    $t->userDoc=$item->description;
+                    $t->xmlTag="";
+                    $t->start=OmniFlow\KW::autoStart;
+                    $t->completion=OmniFlow\KW::autoComplete;
+                    $t->designOptions=array();
+                    $t->modelOptions=array();
+                    $t->label=$item->label;
+                    $item->describe($t);
+
+                    $descs[]=$t;
 		}
 		foreach ($this->messages as $id=>$message)
 		{
-			if (isset($message->name))
-				$msg="<tr><td>Message</td><td>$message->name</td></tr>";
-			echo $msg;
 		}
-		echo '</table>';
+                
+            return $descs;
 		
 	}
         public function Validate()
@@ -377,35 +436,129 @@ class Process extends OmniFlow\WFObject
                 }
             }
         }
-	
-	public static function Load($fileName,$loadExtensions=true)
+        /*
+         *  all references to process are by id (system generated sequence #)
+         *  Case will reference processId and ProcessVersion
+         *  Environemtns:
+         *          Dev:    processes\dev
+         *          Prod    processes\prod
+         * files
+         *      proc_<id>.bpmn  
+         *      proc_<id>.xml
+         *      proc_<id>.svg
+         *  also versions :
+         *      proc_<id>_<version>.ext
+         * 
+         *  process is saved in a file based on environment 
+         */
+	public static function LoadProcess($processId,$processVersion=null,$loadExtensions=true)
 	{
-		OmniFlow\Context::Log(INFO,'Process:load '.$fileName);
-		$jsonPath = OmniFlow\Config::getConfig()->processPath.'/'.$fileName.'.json';
-		//if (!file_exists($jsonPath))
-		$fromXML=true;
+            $proc=new Process($processId);
+            OmniFlow\Context::Log(\OmniFlow\Context::INFO,'Process:load '.$processId);
+  
+            $model=new \OmniFlow\ProcessModel();
+            $model->load($processId,$proc);
 
-		$start = microtime(true);
-		if ($fromXML)
-		{
-		$loader=new OmniFlow\XMLLoader();
-		$loader->loadFile($fileName,$loadExtensions);
-		$proc=$loader->proc;
-//		$proc->SaveJson($jsonPath);
-		$time_elapsed_secs = microtime(true) - $start;
-		OmniFlow\Context::Log(INFO,'Process:load '.$fileName.' - ended @ '.$time_elapsed_secs);
-		
-		return $proc;
-		}
-		else
-		{
-		$json=file_get_contents($jsonPath);
-		$proc=unserialize($json);
-		$time_elapsed_secs = microtime(true) - $start;
-		OmniFlow\Context::Log(INFO,'Process:load '.$fileName.' -json ended @ '.$time_elapsed_secs);
-		return $proc;
-		}
-	}
+//		$jsonPath = OmniFlow\Config::getConfig()->processPath.'/'.$fileName.'.json';
+		//if (!file_exists($jsonPath))
+                
+            $fromXML=true;
+
+            $start = microtime(true);
+            if ($fromXML)
+            {
+                $loader=new OmniFlow\XMLLoader();
+                $loader->loadFile($proc,$loadExtensions);
+//                $proc=$loader->proc;
+    //		$proc->SaveJson($jsonPath);
+                $time_elapsed_secs = microtime(true) - $start;
+                OmniFlow\Context::Log(\OmniFlow\Context::INFO,'Process:load '.$processId.' - ended @ '.$time_elapsed_secs);
+
+                return $proc;
+            }
+            else
+            {
+                $json=file_get_contents($jsonPath);
+                $proc=unserialize($json);
+                $time_elapsed_secs = microtime(true) - $start;
+                OmniFlow\Context::Log(\OmniFlow\Context::INFO,'Process:load '.$fileName.' -json ended @ '.$time_elapsed_secs);
+                return $proc;
+            }
+            
+        }
+        public function getImageFileName()
+        {
+            return Context::getInstance()->processPath.'/proc_'.$this->processId.'.svg';
+        }
+        public function getExtensionFileName()
+        {
+            return Context::getInstance()->processPath.'/proc_'.$this->processId.'.xml';
+        }
+        
+        public function getFileName()
+        {
+            return Context::getInstance()->processPath.'/proc_'.$this->processId.'.bpmn';
+        }
+        public static function getProcessFileName($id)
+        {
+            return 'proc_'.$id;
+        }
+	public static function NewProcess($processName,$processTitle)
+	{
+            $proc=new Process();
+            $proc->processName=$processName;
+            $proc->title=$processTitle;
+            $model=new \OmniFlow\ProcessModel();
+            $model->insert($proc);
+            
+            return $proc;
+
+        }
+        /* update Database with modified Process Information ; 
+         *  title,status
+         *      and start events only
+         */
+        public function Update()
+        {
+            $model=new \OmniFlow\ProcessModel();
+            $model->update($this);
+        }
+        /* returns list of processes
+         *  processId, process name,  title
+         */
+        public static function getList()
+        {
+            $model=new \OmniFlow\ProcessModel();
+            return $model->ListProcesses();
+            
+        }
+        public static function Delete($processid)
+        {
+            $proc=new Process($processid);
+            
+            $file1=$proc->getFileName();
+            $file2=$proc->getExtensionFileName();
+            $file3=$proc->getImageFileName();
+            
+            unlink($file1);                
+            unlink($file2);                
+            unlink($file3);                
+	        
+            $model=new \OmniFlow\ProcessModel();
+            $model->delete($processid);
+            
+            
+        }
+        
+        public function Duplicate()
+        {
+            
+        }
+        public function Save()
+        {
+            
+        }
+	
 	
 	public function SaveJson($fileName)
 	{

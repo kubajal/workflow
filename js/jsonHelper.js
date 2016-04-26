@@ -5,7 +5,9 @@ var jsonData;
 var statusBar;
 function displayStatus(msg)
 {
-    statusBar.setText(msg);
+   if (typeof statusBar !== 'undefined') {
+       statusBar.setText(msg);
+    }
 }
 
 function getTreeData(data,field)
@@ -28,29 +30,28 @@ function getTreeData(data,field)
 
 function getObject(path,objectId)
 {
-    return getJsonValue(path+'.['+objectId+']');
-    
-        if (typeof(jsonRoot)==='undefined') jsonRoot=procJson;
-     
-	var item=null;
-        var nodes=path.split('.');
-       	
-        data=jsonRoot;
-        for(var i=0;i<nodes.length;i++)
-        {
-            var node=nodes[i];
-            data=data[node];
-        }
- 	jQuery.each(data, function(indx, object){  
+    if (objectId!==null)
+        path=path+'.['+objectId+']';
+    return getJsonValue(path);
+}
 
-       		   	var id=object.id
-       		   	if (id==objectId)
-       		   	{
-           		   	item=object;
-           		   	return false;
-       		   	}
-       	   });
-   	   return item;
+function deleteJsonObject(path,objectId)
+{
+    var res=getJsonNode(path,false);
+
+    var index = res['index'];
+    
+    var parent= res['parent'];
+    
+    if (index > -1) {
+        parent.splice(index, 1);
+    }    
+    var tree = res['tree'];
+    for(var i=0;i<tree.length;i++)
+    {
+        tree[i]['_modified']=true;
+    }    
+    markModified();
 }
 
 function getJsonNode(path,createFlag)
@@ -59,9 +60,12 @@ function getJsonNode(path,createFlag)
         var nodes=path.split('.');
         var data=jsonData;
         var parent=null;
+        var tree=Array();
         var node;
         for(var i=0;i<nodes.length;i++)
         {
+            if (data!==null)
+                tree.push(data);
             parent=data;
             node=nodes[i];
 
@@ -74,7 +78,7 @@ function getJsonNode(path,createFlag)
                 else
                     ki=0;
                 var index=node.substring(ki+1,node.length-1);
-                
+
                 if (data instanceof Array)
                 {
                     var found=false;
@@ -96,10 +100,12 @@ function getJsonNode(path,createFlag)
                            var obj=new Object();
                             obj[keyName]=index;
                             data.push(obj);
+                            data=obj;
                         }
                         else
                         {
-                        return {data:data,parent:parent,node:node,status:'NotFound'};
+                            data=null;
+                        return {data:data,parent:parent,node:node,tree: tree ,status:'NotFound',index:indx};
                         }
                     }
                 }
@@ -111,51 +117,33 @@ function getJsonNode(path,createFlag)
             }
             else
             {
-                data=data[node];
+                if(node in data) {
+                    data=data[node];
+                }
+                else {
+                    if (createFlag)
+                    {   // create new object or new array we need to find out
+                        if ((i<nodes.length-1) && (nodes[i+1].indexOf('[')==0)) {
+                            data[node]=new Array();
+                        } else {
+                            data[node]=new Object();
+                        }
+                        data=data[node];
+                                
+                    } else {
+                        data=null;
+                        break;
+                    }
+                }
             }
         }
         
-    return {data:data,parent:parent,node:node};
+    return {data:data,parent:parent,tree: tree ,node:node,index:indx};
 }
 function getJsonValue(path)
 {
     var res=getJsonNode(path,false);
     return res['data'];
-        //var jsonData;
-        var nodes=path.split('.');
-        var data=jsonData;
-        for(var i=0;i<nodes.length;i++)
-        {
-            var node=nodes[i];
-
-            if (node.indexOf('[')==0) 
-            {
-                var index=node.substring(1,node.length-1);
-                
-                if (data.isArray())
-                {
-                    for(var indx=0;indx<data.length;indx++)
-                    {
-                        var rec=data[indx];
-                        if (rec['id']=index)
-                        {
-                            data=rec;
-                            break;
-                        }
-                    }
-                }
-               else
-               {
-                node=index;
-                data=data[node];
-               }
-            }
-            else
-            {
-                data=data[node];
-            }
-        }
-    return data;
 }
 
 function setJsonValue(path,value)
@@ -163,9 +151,19 @@ function setJsonValue(path,value)
     var res=getJsonNode(path,true);
     var pnode=res['parent'];
     var node = res['node'];
-    pnode['_modified']=true;
+    var tree = res['tree'];
+    for(var i=0;i<tree.length;i++)
+    {
+        tree[i]['_modified']=true;
+    }
     pnode[node]=value;
-    
+    markModified();
+}
+function markModified()
+{
+    window.onbeforeunload = function() {
+            return 'Changes to your Design will be lost?';
+            };    
 }
 function getItemValue(path,itemId,field)
 {
@@ -193,6 +191,20 @@ function populateField(path,itemId,field)
     	var fld = jQuery('[name='+fieldName+']');
 	fld.val(fieldVal);
 
+}
+function processItemOver(evt,itemId)
+{
+//	alert(itemId);
+    evt.srcElement.setAttribute("fill-opacity", "20%");
+    evt.srcElement.setAttribute("fill", "chocolate");
+	
+}
+function processItemOut(evt,itemId)
+{
+//	alert(itemId);
+    evt.srcElement.setAttribute("fill-opacity", "20%");
+    evt.srcElement.setAttribute("fill", "none");
+	
 }
 function processItemClicked(evt,itemId)
 {

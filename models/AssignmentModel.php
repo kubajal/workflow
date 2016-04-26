@@ -42,13 +42,8 @@ class AssignmentModel extends OmniModel
 		
 		return $assignment;
 	}
-        public function updateAssignments($caseItem,$condition,$activate,$asActor)
+        public function updateAssignments($caseItem,$condition,$newStatus,$asActor)
         {
-            
-            if ($activate)
-                $newStatus='A';
-            else
-                $newStatus='D';
             
             $sql='update '.$this->getTable(). " set status ='".$newStatus."'";
             
@@ -92,6 +87,7 @@ class AssignmentModel extends OmniModel
 				`caseId` int(11) DEFAULT NULL,
 				`caseItemId` int(11) DEFAULT NULL,
 				`userId` varchar(45) DEFAULT NULL,
+				`userName` varchar(45) DEFAULT NULL,
 				`userGroup` varchar(45) DEFAULT NULL,
 				`workScope` varchar(45) DEFAULT NULL,
 				`workScopeType` varchar(45) DEFAULT NULL,
@@ -99,6 +95,7 @@ class AssignmentModel extends OmniModel
  				`privilege` varchar(45) DEFAULT NULL,
  				`status` varchar(45) DEFAULT NULL,
 				`asActor` varchar(45) DEFAULT NULL,
+				`canChange` varchar(45) DEFAULT NULL,
 				PRIMARY KEY (`id`)
 		) ENGINE=InnoDB AUTO_INCREMENT=122 DEFAULT CHARSET=utf8;";
         return $table;

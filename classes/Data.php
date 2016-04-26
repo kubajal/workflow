@@ -13,7 +13,7 @@ class DataManager
 	/*
 	 * copy of getdataObjectsTree
 	 */
-	public static function getMeta(Process $proc)
+	public static function getMeta(BPMN\Process $proc)
 	{
 		$vars=array();
 		foreach ($proc->dataElements as $de)
@@ -25,7 +25,7 @@ class DataManager
 		return $vars;
 		
 	}
- 	public static function loadDataModel($xml,Process $proc)
+ 	public static function loadDataModel($xml,  BPMN\Process $proc)
  	{
  		$procData=new ProcessData($proc);
  			
@@ -97,7 +97,7 @@ class DataManager
 				' obj: '.var_export($obj,true).' data: '.var_export($data,true));
 	}
 	
-	public static function SaveData($data)
+	public static function SetData($data)
 	{
 		return serialize($data);
 	

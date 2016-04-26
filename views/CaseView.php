@@ -13,7 +13,10 @@ public function ListCases($cases)
             $row=array();
 
                 $row['id']=$case['caseId'];
-                $row['name']=$case['processName'];
+                $row['process']=$case['processName'];
+                $row['status']=$case['caseStatus'];
+                $row['created']=$case['created'];
+                $row['updated']=$case['updated'];
                 
 		$link=Helper::getUrl(array('action'=>'case.view','caseId'=>$case['caseId'])); 
                 $row['action']="View^".$link.'^_self';
@@ -23,9 +26,9 @@ public function ListCases($cases)
 
         $cols=array();
         $titles=array();
-        $cols[]='id,name,action';
-        $titles[]='CaseId,Title,Action';
-        $types[]='ro,ro,link';
+        $cols[]='id,process,action,status,created,updated';
+        $titles[]='CaseId,Process,Action,Status,Created,Updated';
+        $types[]='ro,ro,link,ro,ro,ro';
 
         $this->displayGrid("casesGrid",$rows,$cols,$titles,$types);
         
@@ -34,18 +37,28 @@ public function ListCases($cases)
 
 function ShowCase($case,$imageFile,$showItems=true)
 {
-        $json=$json=json_encode($this->getCaseData($case,$showItems));
+        $arr=$this->getCaseData($case,$showItems);
+        $arr['itemsDescription']=$case->proc->Describe();        
+        $json=$json=json_encode($arr);
 	?>
 
 <script>
+        inDesignMode=false;
+        inViewMode=true;
+        var caseTitle='<?php echo $case->proc->processName;?>';
+        var caseId=<?php echo $case->caseId; ?>;
 	jQuery( document ).ready(function() {
-	BuildCasePage();
-        displayCaseData();
+            BuildCasePage();
+            displayCaseData();
+            main_layout.cells('a').setHeight(200);
+            main_layout.cells('b').setHeight(300);
+            jQuery('#diagramContents').parent().css('overflow-y','auto');            
 	});		
-    caseJson=<?php echo $json; ?>
+        jsonData=<?php echo $json; ?>
+    
 
 </script>
-	<div id="MainLayout" style="position: relative; width: 100%; height: 800px;">
+	<div id="MainLayout" class='mainLayout'>
 	<!-- js will embed layout here -->
 	</div>
 	<!-- Diagram here -->
@@ -55,18 +68,6 @@ function ShowCase($case,$imageFile,$showItems=true)
 	?>
 	</div>	
 	<!-- end of diagram -->
-	<div id="proessItems">
-		<table><tr><td width="25%">
-			<div id="ItemsList">
-			</div> <!-- end of Items list -->
-		  </td>
-		  <td>
-				<div id="itemDetails">
-				</div>
-		  </td>
-		  </tr></table>
-	</div>
-
 <?php
 }
 function getItemAction(WFCase\WFCaseItem $item)
@@ -79,21 +80,32 @@ function getItemAction(WFCase\WFCaseItem $item)
                 $taskId=$item->processNodeId;
                 $task=$case->proc->getItemById($taskId);
 
-                $actionName="Launch $item->type";
+                $link=Helper::getUrl(array('action'=>'task.execute','file'=>$fileName,'caseId'=>$case->caseId,'id'=>$item->id)); 
+                
                 if ($task!=null)
                 {
-                if ($task->isTask())
-                        $actionName="Launch $item->label";
+                    $privileges=  WFCase\Assignment::getPrivileges($task, $item); 
 
-                if ($task->isEvent())
-                        $actionName="Signal Event $item->label";
+                    if ($task->isTask())
+                    {
+
+                        if (in_array(WFCase\Assignment::Perform , $privileges))
+                            $actionName="Launch $item->label";
+                        elseif (in_array(WFCase\Assignment::View , $privileges)) {
+                            $actionName="Launch $item->label";
+                        }
+                    }
+
+                    if ($task->isEvent())
+                    {
+                        if (in_array(WFCase\Assignment::Perform , $privileges)) {
+                            $actionName="Signal Event $item->label";
+                        }
+                    }
                 }
+                if ($actionName!=='')
+                    return "$actionName^$link^_self";
 
-                $link=Helper::getUrl(array('action'=>'task.execute','file'=>$fileName,'caseId'=>$case->caseId,'id'=>$item->id)); 
-
-                $msg="$actionName^$link^_self";
-
-                return $msg;
         }
         else {
                 return "";
@@ -111,10 +123,14 @@ public function getCaseData($case,$showItems)
         foreach($case->items as $item)
         {
             $arr=$item->__toArray();
+            
+            $assignTo=  WFCase\Assignment::getAssignmentForCaseItem($item);
+            
             // add actions here
             // Stephen King^http://www.stephenking.com/the_author.html
             $action=$this->getItemAction($item);
             $arr['action']=$action;
+            $arr['actor']=$assignTo;
             
             $arr['rowNo']=$i;
             $items[]=$arr;
@@ -122,6 +138,13 @@ public function getCaseData($case,$showItems)
         }
         
         $data['items']=$items;
+        $values=array();
+        $i=1;
+        foreach($case->values as $k=>$v)
+        {
+            $values[]=array("id"=>$i++,"field"=>$k,"value"=>$v);
+        }
+        $data['data']=$values;
         return $data;
 	}
 }
@@ -144,7 +167,13 @@ public function getDiagram($case)
 			$decorations[]=array($pitem,$i,'red');
 		}
 	}
-	SVGHandler::displayDiagram($case->proc,$decorations);
+        
+        echo "<div>";// style='overflow-y: scroll;height:400px'>";
+
+        	SVGHandler::displayDiagram($case->proc,$decorations);
+
+        echo '</div>';
+        
 
 }
 }	// end of class

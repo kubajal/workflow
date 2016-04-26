@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ use OmniFlow\BPMN;
 
 use OmniFlow\CaseModel;
 use OmniFlow\CaseItemModel;
-use OmniFlow\ActionManager;
+
 /**
  * Description of WFCase
  *
@@ -34,8 +34,9 @@ class WFCase extends \OmniFlow\WFObject
 	{
 		var $caseId;
 		var $title;
+		var $processId;
+                var $processVersion;
 		var $processName;
-		var $processFullName;
 		var $caseStatus;
                 var $created;
                 var $updated;
@@ -43,9 +44,8 @@ class WFCase extends \OmniFlow\WFObject
 		var $items = Array();
 		var $values=Array();
                 var $assignments=Array();
-                var $participants=Array();
+                var $notifications=Array();
                 
-		var $isProcess=0;
 		public function describe()
 		{
 			echo '<br />Describe Case'.$this->processName."-Id".$this->caseId;
@@ -59,7 +59,7 @@ class WFCase extends \OmniFlow\WFObject
                 {
                         $case=new WFCase();
                         $case->processName = $proc->processName;
-                        $case->processFullName = $proc->processName;
+                        $case->processId = $prod->processId;
                         $case->values=\OmniFlow\DataManager::createDataObject($proc);
                         $case->proc=$proc;        
 
@@ -70,7 +70,7 @@ class WFCase extends \OmniFlow\WFObject
 		{
 			$case=new WFCase();
 			$case->processName = $proc->processName;
-			$case->processFullName = $proc->processName;
+			$case->processId = $proc->processId;
 			$case->values=OmniFlow\DataManager::createDataObject($proc);
 			$case->proc=$proc;
 			$db= new CaseModel();
@@ -79,20 +79,21 @@ class WFCase extends \OmniFlow\WFObject
 		}
                 public function Update()
                 {
-                    $this->proc->Notify(OmniFlow\enum\NotificationTypes::CaseSaving,$this->case);
+                    $this->proc->Notify(OmniFlow\enum\NotificationTypes::CaseSaving,$this);
 		
                     $db=new OmniFlow\CaseModel();
                     $db->update($this);
 		
-                    $this->proc->Notify(OmniFlow\enum\NotificationTypes::CaseSaved,$this->case);
+                    $this->proc->Notify(OmniFlow\enum\NotificationTypes::CaseSaved,$this);
 
                 }
 		static function LoadCase($caseId)
 		{
+                    OmniFlow\Context::Debug('LoadCase for '.$caseId);
 			
 			if ($caseId==null ||empty($caseId))
 			{
-				OmniFlow\Context::Log(ERROR, 'LoadCase needs a valid CaseId ');
+				OmniFlow\Context::Log(\OmniFlow\Context::ERROR, 'LoadCase needs a valid CaseId ');
 				return null;
 			}			
 			$db=new CaseModel();
@@ -101,7 +102,7 @@ class WFCase extends \OmniFlow\WFObject
 			
 			$case=$db->load($caseId, $case);
 
-			$proc=BPMN\Process::Load($case->processFullName);
+			$proc=BPMN\Process::LoadProcess($case->processId);
 
 			$case->proc=$proc;
 		
@@ -110,7 +111,7 @@ class WFCase extends \OmniFlow\WFObject
 				$pitem=$proc->getItemById($item->processNodeId);
 			}
 		
-                        OmniFlow\Context::Log(INFO, "Case Loaded ".print_r($case->values,true));
+                        OmniFlow\Context::Log(\OmniFlow\Context::INFO, "Case Loaded ".print_r($case->values,true));
 			$proc->Notify(OmniFlow\enum\NotificationTypes::CaseLoaded,$case);
 			return $case;
 		}
@@ -122,11 +123,16 @@ class WFCase extends \OmniFlow\WFObject
 			// check if there is already an open item for this node
 			foreach($case->items as $xItem)
 			{
-				if (($xItem->processNodeId == $processItem->id)
-						&& ($xItem->status !=\OmniFlow\enum\StatusTypes::Completed))
-				{
-					return $xItem;
-				}
+                            if ($processItem->type=='endEvent') {
+                                if ($xItem->processNodeId == $processItem->id)
+                                {
+                                    return $xItem;
+                                }       
+                            } elseif (($xItem->processNodeId == $processItem->id)
+                                            && ($xItem->status !=\OmniFlow\enum\StatusTypes::Completed))
+                            {
+                                    return $xItem;
+                            }
 			}
 			
 			
@@ -143,7 +149,17 @@ class WFCase extends \OmniFlow\WFObject
 			$item->timerType = $processItem->timerType;
 			$item->timerRepeat = $processItem->timerRepeat;
 			$item->message = $processItem->message;
+                        // toDo: need to evaluate messageKey to actual value to be stored
+			$item->messageKey = $processItem->messageKeyCaseExpression;
 			$item->signalName = $processItem->signalName;
+                        $item->priority = $processItem->priority;
+                        $item->deadline = $processItem->deadline;
+                        $item->effort = $processItem->effort;
+                        
+                        $item->subProcessId=WFCaseItem::$subProcessId;
+                        $item->parentId=WFCaseItem::$parentId;
+                        
+                        
 			$case->items[]=$item;
 			$db=new OmniFlow\CaseItemModel();
 			$db->insert($item);
@@ -173,16 +189,22 @@ class WFCase extends \OmniFlow\WFObject
 				
 		function EndProcess(ProcessItem $endItem)
 		{
-			$subProc=$endItem->subProcess;
+			$pool=$endItem->pool;
 			foreach ($this->items as $item)
 			{
 				$pItem=$this->proc->getItemById($item->processNodeId);
 				
-				if ($item->status!=\OmniFlow\enum\StatusTypes::Completed && $pItem->subProcess==$subProc)
+				if ($item->status!=\OmniFlow\enum\StatusTypes::Completed 
+                                        && $pItem->pool==$pool)
 				{
+                                    \OmniFlow\Context::debug("WFCase.EndProcess terminating item $item->id");
 					$item->Update(\OmniFlow\enum\StatusTypes::Terminated);
 				}
 			}
+                        if ($this->caseStatus==='' || $this->caseStatus===null)
+                            $this->caseStatus='Complete';
+                        
+                        $this->Update();
 		}		
 		public function GetValue($variableName)
 		{
@@ -201,7 +223,7 @@ class WFCase extends \OmniFlow\WFObject
 		public function __toArray()
 		{
 			$data=parent::__toArray();
-			$data['caseValues']=OmniFlow\DataManager::SaveData($this->values);
+			$data['caseValues']=OmniFlow\DataManager::SetData($this->values);
 			return $data;
 		}
 		public function __fromArray($data)

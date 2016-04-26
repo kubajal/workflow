@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ abstract class StatusTypes
 	const None = "";
 	const Started = "Started";
 	const Waiting ="Waiting";
+        const Updated="Updated";
 	const Completed="Complete";
 	const Terminated="Terminated";
 	const Error="Error";

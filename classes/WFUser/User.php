@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,10 @@ class User extends \OmniFlow\WFObject
     {
         return $this->memberships;
     }
+    /*
+     * if user is an administrator
+     * 
+     */
     public function isAdmin()
     {
         foreach($this->roles as $role)
@@ -52,9 +56,16 @@ class User extends \OmniFlow\WFObject
     }
     public function isMemberOf($userGroup,$workScopeType=null,$workScope=null)
     {
-        // ToDo:
         if ($this->isAdmin())
             return true;
+        
+        if ($workScopeType===null || $workScopeType==='') {
+            foreach($this->roles as $role)
+            {
+                if ($role===$userGroup)
+                    return true;
+            }
+        }
         foreach($this->memberships as $membership)
         {
             if ($membership->userGroup ===$userGroup)
@@ -96,6 +107,18 @@ class User extends \OmniFlow\WFObject
             return true;
         else
             return false;
+    }
+    public static function getUserById($userId)
+    {
+        $user=new User();
+        
+        $wpUser=get_userdata( $userId );
+        
+           $user->id=$wpUser->data->ID;
+           $user->name=$wpUser->data->display_name;
+           $user->email=$wpUser->data->user_email;
+           $user->roles=$wpUser->roles;                
+        return $user;
     }
 }
 

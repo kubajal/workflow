@@ -30,12 +30,19 @@ function endsWith($haystack, $needle) {
 function omniFlow_AutoLoader($className)
 {
 //        Context::Debug('<br />loading '.$className);
+        $folder='';
+                
 	$className=str_replace('\\', '/', $className);
         if (strrpos($className, '/')!==false)
         {
             $class= substr($className,strrpos($className, '/')+1);
             $folder=substr($className,0,strrpos($className, '/'));
             
+           if ($folder=='Cron')
+           {
+                include __DIR__.'/lib/Cron/' . $class . '.php';
+                return;
+           }
            if ($folder=='OmniFlow/BPMN')
            {
                 include __DIR__.'/classes/BPMN/' . $class . '.php';
@@ -91,28 +98,37 @@ function omniFlow_AutoLoader($className)
 
         if (endsWith($className, "View"))
         {
-            include_once __DIR__.'/views/' . $className . '.php';
+            $path=__DIR__.'/views/' . $className . '.php';
+                if (file_exists($path))
+                include_once $path;
             return;
         }
         elseif (endsWith($className, "Controller"))
         {
-            include_once __DIR__.'/controllers/' . $className . '.php';
+            $path=__DIR__.'/controllers/' . $className . '.php';
+            if (file_exists($path))
+                include_once $path;
             return;
         }
         elseif (endsWith($className, "Model"))
         {
-            include_once __DIR__.'/models/' . $className . '.php';
+            $path=__DIR__.'/models/' . $className . '.php';
+            if (file_exists($path))
+                include_once $path;
             return;
         }
         elseif (endsWith($className, "Engine"))
         {
-            include_once __DIR__.'/classes/engine/' . $className . '.php';
+            $path=__DIR__.'/classes/engine/' . $className . '.php';
+            if (file_exists($path))
+                include_once $path;
             return;
         }
 	else 
 	{
             $path =__DIR__.'/classes/' . $className . '.php';
-            include $path;
+            if (file_exists($path))
+                include_once $path;
 	}
 }
 
@@ -125,6 +141,7 @@ register_shutdown_function( __NAMESPACE__."\\fatal_handler" );
 
 set_error_handler(function($errno, $errstr, $errfile, $errline, array $errcontext) {
     // error was suppressed with the @-operator
+//    Context::Log('INFO',"warning:$errstr in $errfile at $errline");
     if (0 === error_reporting()) {
         return false;
         }
@@ -149,7 +166,7 @@ function fatal_handler()
 		$errstr  = $error["message"];
 
 		OmniFlow\Logger::Error($errstr);
-		Context::Log(INFO,var_export($error,true));
+		Context::Error(var_export($error,true));
 
 		//		error_mail(format_error( $errno, $errstr, $errfile, $errline));
 	}

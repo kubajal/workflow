@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,8 @@ use OmniFlow\WFCase;
 class ProcessItem extends OmniFlow\WFObject
 {
 	var $proc;
+        var $processId;
+        var $seq=null;       // a sequential number 1..n
 	var $id;	// from the XML File
 	var $name;	// from the XML File
 	var $type;	// from the XML File
@@ -52,10 +54,9 @@ class ProcessItem extends OmniFlow\WFObject
 	var $hasMessage;
 	var $hasSignal;
 	var $message;			// name of message for event or receiveTask
-//	var $messageKeys;		// remove
-	var $messageRepeat;
+	var $messageKeyCaseExpression;		
+	var $messageKeyMsgExpression;		
         var $signalName;
-	var $finalMessageCondition;
 	
 	var $actionType;
 	var $actionScript;			// to be executed
@@ -64,7 +65,15 @@ class ProcessItem extends OmniFlow\WFObject
 
 	var $xCoord;
 	var $yCoord;
-	var $subProcess;
+	var $pool;
+        
+        var $priority;
+        var $deadline;
+        var $deadlineFrom;
+        var $effort;
+        var $description;
+//        var $subItem;
+        var $scripts=array();
         
 
         /*
@@ -72,7 +81,7 @@ class ProcessItem extends OmniFlow\WFObject
          */
         public static function isSenderType($type)
         {
-            if ($type=='sendTask')
+            if ($type=='sendTask' || $type == 'intermediateThrowEvent')
                 return true;
             
             return false;
@@ -81,19 +90,40 @@ class ProcessItem extends OmniFlow\WFObject
 	 * 	this is called internally to complete an outstanding task
 	 * 	pre-conditions:	task is already started
 	 *  impact:	Task will be completed and outflows will fire
+         * 
+         * 
 	 */
-	public function Complete(WFCase\WFCaseItem $caseItem,$values="",$input="",ProcessItem $from)
+	public function Complete(WFCase\WFCaseItem $caseItem,ProcessItem $from)
 	{
-		$this->Finish($caseItem,$input,$from);
+            $input='';
+            \OmniFlow\Context::Debug("ProcessItem:Complete calling finish $this->id $caseItem->id");
+		$this->finish($caseItem,$input,$from);
+                WFCase\Assignment::TaskComplete($caseItem);
+
 		$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Completed,$values,$from);
 	}
-	
-	public function SetValues(WFCase\WFCaseItem $caseItem,$values,$updateCase=true)
+	public function ReceiveMessage(WFCase\WFCaseItem $caseItem,$messageName,$values)
         {
-                OmniFlow\Context::Log(INFO,print_r($values,true));
+            return $this->SaveData($caseItem, $values,  \OmniFlow\enum\StatusTypes::Completed);
+        }
+	public function ReceiveSignal(WFCase\WFCaseItem $caseItem,$signaleName,$values)
+        {
+            return $this->SaveData($caseItem, $values,  \OmniFlow\enum\StatusTypes::Completed);
+        }
+        public function TimerDue($caseItem)
+        {
+            $this->Complete($caseItem, null);
+        }
+        /*
+         *  
+         */
+	public function SaveData(WFCase\WFCaseItem $caseItem,$values,$newStatus=  \OmniFlow\enum\StatusTypes::Updated)
+        {
+                OmniFlow\Context::Log(\OmniFlow\Context::INFO,print_r($values,true));
 
                 $case = $caseItem->case;
 
+                
                 foreach($this->dataElements as $variable)
                 {
                     $de=$variable->getDataElement($this->proc);
@@ -114,32 +144,45 @@ class ProcessItem extends OmniFlow\WFObject
                     }
 
                 }
-                if ($updateCase)
-        		$caseItem->case->Update();
+                
+		if (!$this->Notify(OmniFlow\enum\NotificationTypes::NodeValidate,$caseItem))
+                        return false;
+                
+		$this->Notify(OmniFlow\enum\NotificationTypes::NodeSaved,$caseItem);
+                
+                
+                if ($newStatus==OmniFlow\enum\StatusTypes::Completed)
+                    $this->Complete ($caseItem, null);
+                else {
+                    $this->setStatus($caseItem, $newStatus);
+                }
             
         }
         public function isExecutable()
         {
-            return $this->getSubProcess()->isExecutable();
+            return $this->getPool()->isExecutable();
         }
             
-	public function setStatus(WFCase\WFCaseItem $caseItem,$newStatus,$values="",$from=null)
+	private function setStatus(WFCase\WFCaseItem $caseItem,$newStatus,$values="",$from=null)
 	{        
 
-            if ($newStatus==\OmniFlow\enum\StatusTypes::Completed)
+            if ($newStatus == \OmniFlow\enum\StatusTypes::Completed)
                 WFCase\Assignment::TaskComplete($caseItem);
             
-		OmniFlow\Context::Log(INFO, "setStatus: $this->id from $caseItem->status to $newStatus");
+		$this->Notify(OmniFlow\enum\NotificationTypes::NodeCompleted,$caseItem);
+		OmniFlow\Context::Log(\OmniFlow\Context::LOG,"ProcessIterm Executing-setting status to : $newStatus $this->type - $this->label - from: $from  $this->id" );
+            
+		OmniFlow\Context::Log(\OmniFlow\Context::INFO, "setStatus: $this->id from $caseItem->status to $newStatus");
                 if (($caseItem->status==\OmniFlow\enum\StatusTypes::Completed) ||($caseItem->status==\OmniFlow\enum\StatusTypes::Terminated))
                 {
-//                    throw new \Exception("setStatus: $this->id from $caseItem->status to $newStatus");
+//          toDo: uncomment          throw new \Exception("setStatus: $this->id from $caseItem->status to $newStatus");
                 }
 		if (is_string($values))
 		{
 		}
 		else if (is_array($values))
 		{
-                    $this->SetValues($caseItem,$values,false);
+                    $this->SaveData($caseItem,$values,false);
 		}
                 $itemStatus= new WFCase\WFCaseItemStatus($caseItem,$newStatus,$from);
                 $itemStatus->insert();
@@ -151,14 +194,13 @@ class ProcessItem extends OmniFlow\WFObject
 	}
 	public function __Construct($proc,$label="")
 	{
+                $this->processId=$proc->processId;
 		$this->proc = $proc;
 		$proc->items[]=$this;
 		$this->label = $label;
 		$this->hasMessage=false;
+                $this->hasSignal=false;
 		$this->hasTimer=false;
-		
-
-
 	}
 	public function loadFromXML($node)
 	{
@@ -187,9 +229,23 @@ class ProcessItem extends OmniFlow\WFObject
 	{
 		return false;	
 	}
-	function Notify($event)
+	function Notify($event,$caseItem=null)
 	{
-		$this->proc->Notify($event,$this);
+            $this->proc->Notify($event,$this);
+            
+            if ($caseItem==null)
+                return true;
+            
+            NotificationRule::ChekNotificationsForItem($event, $this, $caseItem);
+            
+            if (isset($this->scripts[$event]))
+            {
+                $script=$this->scripts[$event];
+                $ret=  \OmniFlow\ActionManager::ExecuteAction($script,$caseItem);
+                
+                return $ret;
+            }
+            return true;
 	}
 	public function Init()
 	{
@@ -220,17 +276,73 @@ class ProcessItem extends OmniFlow\WFObject
         }
         public function checkAccessRules($caseItem)
         {
-            $ret=WFCase\Assignment::CanPerform($this, $caseItem);
-            if (!$ret)
-            {
-               throw new \Exception("You are not authorized to perform this function");
-                
-            }
-            
-            return true;
+            return WFCase\Assignment::GetPrivilege($this, $caseItem);
         }
+	/*
+         *  Called to Execute a ProcessItem from begining to End
+         *Execute::<<--- invoked from process
+         *  1) start (inherited)    check if item to be skipped or runnable
+         *  2) create Case Item
+         *          Event:NodeStarted
+         *  3)  assign
+         *          Event:NodeAssigned
+         *  4)   NeedToWait (inherited) Check For waiting? 
+         *      goto invoke
+         *Invoke:
+         *   5) Run       perform the work
+         *   6) isComplete (inherited)
+         *   7) Finish    calls outflows
+         */
+	public function Execute(WFCase\WFCase $case,$input,$from)
+	{
+		
+		$fromLabel="";
+                if ($from!=null)
+                    $fromLabel=$from->label;
+		OmniFlow\Context::Log(\OmniFlow\Context::LOG,"**ProcessItem Executing: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
+		
+
+                if (!$this->isExecutable()) {
+        		OmniFlow\Context::Log(\OmniFlow\Context::LOG,"ProcessItem Executing node not executable - skipped: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
+                        return false;
+                }
+                
+		if (!$this->start($case,$input,$from))
+		{
+			$this->Notify(OmniFlow\enum\NotificationTypes::NodeSkipped);
+        		OmniFlow\Context::Log(\OmniFlow\Context::LOG,"ProcessItem Executing node skipped: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
+			return false;
+		}
+                
+                $caseItem= WFCase\WFCase::createItemHandler($case,$this->proc, $this);
+
+                $this->Notify(OmniFlow\enum\NotificationTypes::NodeStarted,$caseItem);
+                $this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Started,null,$from);
+
+                $this->Assign($caseItem);
+                $this->Notify(OmniFlow\enum\NotificationTypes::NodeAssigned,$caseItem);
+                
+            //**** NeedToWait    
+                // check Access Rules and assign Role if required
+
+                if ($this->NeedToWait($caseItem,$input,$from))
+                {
+            	OmniFlow\Context::Log(\OmniFlow\Context::LOG,"ProcessItem Executing Going into Wait Mode$this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
+                    return false;
+                }
+                
+		OmniFlow\Context::Log(\OmniFlow\Context::LOG,"ProcessItem Executing continue to Invoke: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
+                
+
+                if ($from==null)
+                    $this->Invoke($caseItem,"",$input);
+                else
+                    $this->Invoke($caseItem,"",$input,$from);
+                    
+                
+	}
        	/*
-	 * 	this is called internally to invoke a outstanding task like a 'Receive Task'
+	 * 	this is called externally and internally to invoke a outstanding task like a 'Receive Task'
 	 * 	pre-conditions:	task is already started
 	 *  impact:	Task will decide if it is waiting for any more messages
 	 */
@@ -241,114 +353,81 @@ class ProcessItem extends OmniFlow\WFObject
                 if ($from!=null)
                     $fromLabel=$from->label;
 
+		OmniFlow\Context::Log(\OmniFlow\Context::LOG,"ProcessItem Invoke : $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
                 
-                // check Access Rules and assign Role if required
-
-                if ($this->NeedToWait($caseItem,$value,$input,$from))
-                {
-            	OmniFlow\Context::Log(LOG,"ProcessItem Executing-Invoke: Going into Wait Mode$this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
-                    return false;
+                $this->Notify(OmniFlow\enum\NotificationTypes::NodePreRun,$caseItem);
+                
+                
+                if (!$this->run($caseItem, $input, $from)) {
+			return false;
                 }
                 
-		OmniFlow\Context::Log(LOG,"ProcessItem Executing-Invoke: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
                 
-		if (!$this->Run($caseItem,$input,$from))
-		{
-			return false;
-		}
-		else 
-		{
-//			if ($this->result!=null)
-//				$input=$this->result;
-		}
-		OmniFlow\Context::Log(LOG,"ProcessItem Executing-Finish: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
-		$ret =$this->Finish($caseItem,$input,$from);
+                $this->Notify(OmniFlow\enum\NotificationTypes::NodeRun,$caseItem);
+                
+                
+                if (!$this->isComplete($caseItem, $input, $from))
+                    return $caseItem;
+                
+            \OmniFlow\Context::Debug("ProcessItem:invoke calling finish $this->id $caseItem->id");
+		$ret =$this->finish($caseItem,$input,$from);
 		
                 if ($ret==false)
                 {
-		$this->Notify(OmniFlow\enum\NotificationTypes::Error);
+		$this->Notify(OmniFlow\enum\NotificationTypes::Error,$caseItem);
 		$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Error);
                 }
                 else
                 {
-		$this->Notify(OmniFlow\enum\NotificationTypes::NodeCompleted);
-		OmniFlow\Context::Log(LOG,"ProcessIterm Executing-setting status to complete: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
                 
 		$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Completed,$values,$from);
                 }
 
 		return $caseItem;
 	}
+        
+        /*
+         * start    is called by Execute
+         * Inherited 
+         */
 	function NeedToWait(WFCase\WFCaseItem $caseItem,$input,$from)
         {
             return false;
         }
-	/*
-         *  Called to Execute a ProcessItem from begining to End
-         * 
-         *      calls   1) Creates a CaseItem
-         *              2) Start
-         *              3) Invoke
-         *                  4) Run
-         *                  5) Finish
+        /*
+         * start    is called by Invoke
+         * Inherited 
          */
-	public function Execute(WFCase\WFCase $case,$input,$from)
+	protected function isComplete(WFCase\WFCaseItem $caseItem,$input,$from)
+        {
+            return true;
+        }
+        /*
+         * start    is called by Execute
+         * Inherited 
+         */
+	protected function start(WFCase\WFCase $case,$input,$from)
 	{
-		
-		$caseItem= WFCase\WFCase::createItemHandler($case,$this->proc, $this);
-		$fromLabel="";
-                if ($from!=null)
-                    $fromLabel=$from->label;
-		OmniFlow\Context::Log(LOG,"**ProcessItem Executing: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
-		
+		return true;
+	}
+        /*
+         * run    is called by Invoke
+         * Inherited 
+         */
+	protected function run(WFCase\WFCaseItem $caseItem,$input,$from)
+	{
+                return true;
+        }
 
-		if (!$this->Start($caseItem,$input,$from))
-		{
-			$this->Notify(OmniFlow\enum\NotificationTypes::NodeSkipped);
-        		OmniFlow\Context::Log(LOG,"ProcessItem Executing node skipped: $this->type - $this->label - from: $fromLabel  $this->id -input=$input" );
-			return false;
-		}
-		else 
-		{
-			$this->Notify(OmniFlow\enum\NotificationTypes::NodeStarted);
-			$this->setStatus($caseItem,\OmniFlow\enum\StatusTypes::Started,null,$from);
-		}
-
-                $this->Assign($caseItem);
-                
-                if ($from==null)
-                    $this->Invoke($caseItem,"",$input);
-                else
-                    $this->Invoke($caseItem,"",$input,$from);
-                    
-                
-	}
-	public function Start(WFCase\WFCaseItem $caseItem,$input,$from)
+        /*
+         * start    is called by Invoke
+         * Inherited 
+         */
+	protected function finish(WFCase\WFCaseItem $caseItem,$input,$from)
 	{
 		return true;
 	}
-	public function Run(WFCase\WFCaseItem $caseItem,$input,$from)
-	{
-		if ($this->actionScript!="")
-                {
-			$ret=eval ($this->actionScript);
-                        OmniFlow\Context::Log(INFO, "executing script: $this->actionScript ret: $ret" );
-                }
-		
-		if ($this->customFunction!="")
-		{
-//			echo 'invoking custom function';
-			$ret=$this->customFunction($this);
-//			echo $ret;
-		}
-		
-		return true;
-	}
-	public function Finish(WFCase\WFCaseItem $caseItem,$input,$from)
-	{
-                WFCase\Assignment::TaskComplete($caseItem);
-		return true;
-	}
+        
         /*
          * Assign
          * Create Assignments based on AccessRules 
@@ -370,13 +449,20 @@ class ProcessItem extends OmniFlow\WFObject
                 }
                 
                 $data['dataElements']=$els;
+
+                $scrs=array();
+                foreach($this->scripts as $sid=>$scr)
+                {
+                    $scrs[]=Array("id"=>$sid,"script"=>$scr);
+                }
+                
+                $data['scripts']=$scrs;
                 return $data;
         }
 
-        
-	public function describe()
+	public function describe(\OmniFlow\Describer $t)
 	{
-		return $this->type;
+
 	}
 }
 

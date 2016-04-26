@@ -1,29 +1,29 @@
 <?php
+/*
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 namespace OmniFlow;
 
 
 class Controller
 {
-	
-public function headerDelete($menus=true,$modeler=false)
-{
-	
-/*	header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-	header("Cache-Control: post-check=0, pre-check=0", false);
-	header("Pragma: no-cache"); 
 
-<link rel="stylesheet" href="css\workflow.css" type="text/css">
-<script type="text/javascript" src="js/jquery.min.js"></script>
-<script type="text/javascript" src="js/workflow.js"></script>
-<link rel="stylesheet" href="lib/jquery-ui/jquery-ui.css">
-<link rel="stylesheet" href="lib/jquery-ui/jquery-ui.theme.css">
-<script src="lib/jquery-ui/jquery-ui.min.js"></script>
-	
-	*/
-	Helper::HeaderInclude('',$modeler);
-if ($menus)
-	MenusView::displayMenus();
-}
+    var $ajaxCall=false;
+    
 /*
  * 
  * 
@@ -53,22 +53,59 @@ public function Action($req=null)
        try {
       
        $this->doAction($req);
-       QueueEngine::checkQueue();
        
        } 
     catch (\Exception $ex) {
         Context::Exception($ex);
         }
+        
+    $this->doBatch();
+}
+public function doBatch()
+{
+       try {
+        Context::$batchMode=true;
+       
+        EventEngine::Check();
+        QueueEngine::checkQueue();
+        
+       } 
+        catch (\Exception $ex) {
+        Context::Exception($ex);
+       }
+        Context::$batchMode=false;
 
 }
 public function login()
 {
- ?>
-Please Login
-<form >
-    
-</form>
-<?php
+
+    $url=Context::getInstance()->loginURL;
+    $page="<a href=$url>Please login</a>
+<br />To login use the following userids
+<table>
+    <tr><td>user name</td><td>password</td><td>function</td></tr>
+    <tr><td>analyst1</td><td>demo</td><td>To Model and Design Processes</td></tr>
+    <tr><td>employee1</td><td>demo</td><td>To create an expense </td></tr>
+    <tr><td>manager1</td><td>demo</td><td>To approve the expense</td></tr>
+    <tr><td>accounting1</td><td>demo</td><td>To review and process the expense</td></tr>
+</table>    ";
+    echo $page;
+ 
+}
+/*
+ *  Checks if user is authorized for this function
+ *      default behaviour here that user must be login
+ */
+
+public function Check_default($req)
+{
+    $cont=  Context::getInstance();
+    $user= Context::getuser();
+    if ($user->id==null) {// not logged
+        $this->login();
+        return false;
+    }
+    return true;
 }
 public function doAction($req=null)
 {
@@ -77,138 +114,68 @@ public function doAction($req=null)
 	
 	
 	Context::Log(INFO,'--------------------');
-	Context::Log(INFO,"Controller".print_r($req,true));
+	Context::Log(INFO,"Controller".print_r($req,true)." user:".  var_export(Context::getuser(),true));
 	
-	if (!isset($req["action"]))
+	if ((!isset($req["action"]) || ($req["action"]=='') ))
 	{
-		Views::header();
-                Views::endPage();
-		return;
+            $req["action"]='task.dashboard';
+
 	}
 
 	$action=$req["action"];
+        
+        if ($action==='cron')
+        {
+           return EventEngine::Check();
+        }
+         
 
         $pos=strpos($action,'.');
         if ($pos !== false) {        
             $className=__NAMESPACE__.'\\'.ucwords(substr($action,0,$pos)).'Controller';
             $methodName='Action_'.substr($action,$pos+1);
             
+            $checkMethodName='Check_'.substr($action,$pos+1);
+            
             Context::Log(INFO, $className.' method:'.$methodName);
             $contr=new $className();
+            
+            if (method_exists($contr, $checkMethodName))
+            {
+                if (!$contr->$checkMethodName($req))
+                    return;
+            } else {
+                if (!$contr->Check_default($req))
+                    return;
+                
+            }
+            
             if (method_exists($contr, $methodName))
             {
                 $contr->$methodName($req);
-                QueueEngine::checkQueue();
 
                 return;
             }
         }
+        
         $methodName='Action_'.$action;
         if (method_exists($this, $methodName))
         {
             $this->$methodName();
-            QueueEngine::checkQueue();
             return;
         }
         
 	$v=new Views();
 
-	switch ($action)
-	{
-	case "getDataTree":
-		header('Content-Type: text/xml');
-echo '<?xml version="1.0" encoding="iso-8859-1"?>
-<tree id="0" radio="1">
-	<item   text="Books" id="books" open="1">
-		<item text="Mystery &amp; Thrillers" id="mystery">
-			<item text="Lawrence Block" id="lb">
-				<item text="All the Flowers Are Dying" id="lb_1"></item>
-				<item text="The Burglar on the Prowl" id="lb_2"></item>
-				<item text="The Plot Thickens" id="lb_3"></item>
-				<item text="Grifters Game" id="lb_4"></item>
-				<item text="The Burglar Who Thought He Was Bogart" id="lb_5"></item>
-			</item>
-			<item text="Robert Crais" id="rc">
-				<item text="The Forgotten Man" id="rc_1"></item>
-				<item text="Stalking the Angel" id="rc_2"></item>
-				<item text="Free Fall" id="rc_3"></item>
-				<item text="Sunset Express" id="rc_4"></item>
-				<item text="Hostage" id="rc_5"></item>
-			</item>
-			<item text="Ian Rankin" id="ir"></item>
-			<item text="James Patterson" id="jp"></item>
-			<item text="Nancy Atherton" id="na"></item>
-		</item>
-		<item text="History" id="history">
-			<item text="John Mack Faragher" id="jmf"></item>
-			<item text="Jim Dwyer" id="jd"></item>
-			<item text="Larry Schweikart" id="ls"></item>
-			<item text="R. Lee Ermey" id="rle"></item>
-		</item>
-		<item text="Horror" id="horror" open="1">
-			<item text="Stephen King" id="sk"></item>
-			<item text="Dan Brown" id="db">
-				<item text="Angels &amp; Demons" id="db_1"></item>
-				<item text="Deception Point" id="db_2"></item>
-				<item text="Digital Fortress" id="db_3"></item>
-				<item text="The Da Vinci Code" id="db_4"></item>
-				<item text="Deception Point" id="db_5"></item>
-			</item>
-			<item text="Mary Janice Davidson" id="mjd"></item>
-			<item text="Katie Macalister" id="km"></item>
-		</item>
-		<item text="Science Fiction &amp; Fantasy" id="fantasy">
-			<item text="Audrey Niffenegger" id="af"></item>
-			<item text="Philip Roth" id="pr"></item>
-		</item>
-		<item text="Sport" id="sport">
-			<item text="Bill Reynolds" id="br"></item>
-		</item>
-		<item text="Teens" id="teens">
-			<item text="Joss Whedon" id="jw">
-				<item text="Astonishing X-Men" id="jw_1"></item>
-				<item text="Joss Whedon: The Genius Behind Buffy" id="jw_2"></item>
-				<item text="Fray" id="jw_3"></item>
-				<item text="Tales Of The Vampires" id="jw_4"></item>
-				<item text="The Harvest" id="jw_5"></item>
-			</item>
-			<item text="Meg Cabot" id="mc"></item>
-			<item text="Garth Nix" id="gn"></item>
-			<item text="Ann Brashares" id="ab"></item>
-		</item>
-	</item>
-</tree>';
-
-		break;
-	case "help":
-		Views::header();
-		$v->ShowHelp();
-                Views::endPage();
-		break;
-        default :
-		Views::header();
-            echo 'No such action:'.$action;
-                Views::endPage();
-	}
+	Views::header();
+         echo 'No such action:'.$action;
+         Context::debug('No such action:'.$action);
+        Views::endPage();
         
-        QueueEngine::checkQueue();
 }
-
-function getProcessTypes()
+function redirect($req)
 {
-	$arr=Array();
-	
-if ($handle = opendir(Config::getConfig()->processPath)) {
-
-	/* This is the correct way to loop over the directory. */
-	while (false !== ($entry = readdir($handle))) {
-		if (substr($entry, -5)==".bpmn")
-			$arr[]=$entry;
-	}
-	closedir($handle);
- }
- return $arr;
+    
 }
-
 }
 ?>

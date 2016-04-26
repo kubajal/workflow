@@ -1,4 +1,21 @@
 <?php
+/*
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 namespace OmniFlow
 
 {
@@ -210,7 +227,7 @@ type: "select", label: "Account type", options:[
 		if ($this->xmlExt)
 			ProcessExtensions::setNode($node, $this->xmlTag, $value);
 	}
-	public function fromXML($xmlNode,ProcessItem $item)
+	public function fromXML($xmlNode, \OmniFlow\BPMN\ProcessItem $item)
 	{
 		$val=$xmlNode->__toString();
 		$pn=$this->name;
@@ -234,7 +251,8 @@ type: "select", label: "Account type", options:[
 		MetaProperty::Add($a,$gr,'label','Label',1,MetaProperty::Editable);
 		MetaProperty::Add($a,$gr,'lane','Lane',2);
 		MetaProperty::Add($a,$gr,'actor','Actor',1,MetaProperty::Editable)->xmlExt=true;
-		MetaProperty::Add($a,$gr,'subProcess','Sub-Process',2,MetaProperty::EditDisplay);
+		MetaProperty::Add($a,$gr,'actor','Actor',1,MetaProperty::Editable)->xmlExt=true;
+		MetaProperty::Add($a,$gr,'description','Description',2,MetaProperty::Editable)->xmlExt=true;
 		$p=MetaProperty::Add($a,$gr,'caseStatus','Case Status',2,MetaProperty::EditDisplay);
                         $p->xmlExt=true;
 		
@@ -274,8 +292,9 @@ type: "select", label: "Account type", options:[
 		MetaProperty::Add($a,$gr,'hasMessage','');
 		MetaProperty::Add($a,$gr,'hasSignal','');
 		MetaProperty::Add($a,$gr,'message','Message',1,MetaProperty::Editable,MetaProperty::Save)->xmlExt=true;
-		MetaProperty::Add($a,$gr,'messageRepeat','Message is Repeated',1,MetaProperty::Editable,MetaProperty::Save)->xmlExt=true;
-		MetaProperty::Add($a,$gr,'messageFinalCondition','Final Message Condition',2,MetaProperty::Editable,MetaProperty::Save)->xmlExt=true;
+		MetaProperty::Add($a,$gr,'signalName','SignalName',1,MetaProperty::Editable,MetaProperty::Save)->xmlExt=true;
+		MetaProperty::Add($a,$gr,'messageKeyCaseExpression','Message Key Case expression',1,MetaProperty::Editable,MetaProperty::Save)->xmlExt=true;
+		MetaProperty::Add($a,$gr,'messageKeyMsgExpression','Message Key Message expression',2,MetaProperty::Editable,MetaProperty::Save)->xmlExt=true;
 
 		
 		$gr="Action";
@@ -312,7 +331,7 @@ type: "select", label: "Account type", options:[
 		MetaProperty::Add($a,'type','Type',MetaProperty::EditDisplay);
 		MetaProperty::Add($a,'label','Label',MetaProperty::Editable);
 		MetaProperty::Add($a,'actors','Actor')->xmlExt=true;
-		MetaProperty::Add($a,'subProcesss','Sub-Processes');
+		MetaProperty::Add($a,'pools','Pools');
 
 		self::$processProperties=$a;
 		return self::$processProperties;

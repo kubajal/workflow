@@ -1,10 +1,22 @@
 <?php
 
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 namespace OmniFlow;
 
@@ -24,14 +36,35 @@ class Context extends WFObject
 {
 	var $user;
         var $fromWordPress;
-        var $feedback=array();
         var $errors=array();
         var $dataToSave=array();
         var $omniBaseURL="";
+        var $processPath;
+        var $site;
+        // Environment  data
+        var $invId;
+        var $DevProd;
+        var $clientId;
+        
+        var $loginURL;
+        
+        var $sendEmail=true;
+        
+        var $inputData=Array();
+        var $outputData=Array();
+        
+	static $pageUrl;
+        
+        static $batchMode=false;
+
         
     static $validitionErrorsCount;        
     
     protected static $_instance=null;
+    const ERROR="Error";
+    const INFO = "Info";
+    const LOG = "Log";
+    const VALIDATION_ERROR="validationError";
         
     /*
      * Context object need to handle simulation
@@ -40,11 +73,22 @@ class Context extends WFObject
      */
     protected function __construct()
     {
+        $config=new Config();
+        $this->processPath=$config->processPath;
+        $this->sendEmail=$config->sendEmail;
     }
 
     protected function __clone()
     {
         //Me not like clones! Me smash clones!
+    }
+    public static function inAdmin()
+    {
+        if (function_exists('is_admin'))
+        {
+            return is_admin();
+        }
+        return false;
     }
     /*
      *  Saving Data
@@ -86,6 +130,13 @@ class Context extends WFObject
            $_SESSION[$variable]=$val;
 
     }
+    public static function getSite()
+    {
+        if (self::getInstance()->site==null)
+            self::getInstance()->site=new Site();
+        
+        return self::getInstance()->site;
+    }
     public static function getuser()
     {
         if (self::getInstance()->user==null)
@@ -100,21 +151,23 @@ class Context extends WFObject
 
         return self::$_instance;
     }
-    public static function feedback($msg)
-    {
-        self::getInstance()->feedback[]=$msg;
-    }
     public static function Exception(\Exception $ex)
     {
-        echo '<br />System Error '.$ex->getMessage().' in file: '.$ex->getFile().
+        
+        $msg='System Error '.$ex->getMessage().' in file: '.$ex->getFile().
                 ' at line '.$ex->getLine();
+        self::Log(ERROR, $msg);
+        
+        if (!self::$batchMode)
+            echo '<br />'.$msg;
         
     }
     public static function Error($msg)
     {
         self::Log(ERROR, $msg);
         self::getInstance()->errors[]=$msg;
-        echo "<br />ERROR $msg";
+        if (!self::$batchMode)
+            echo "<br />ERROR $msg";
     }
     public static function Debug($msg)
     {

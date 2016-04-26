@@ -14,9 +14,11 @@ namespace OmniFlow;
  * @author ralph
  */
 class ModlerView extends Views {
-    public function showEditor($file)
+    
+    
+    public function showEditor($processId,$file,$title)
     {
-        $xmlFile = Config::getConfig()->processPath.'/'.$file;
+        $xmlFile = $file;
 	$xml = file_get_contents($xmlFile);
         $bUrl=Context::getInstance()->omniBaseURL;
         
@@ -26,7 +28,7 @@ class ModlerView extends Views {
 </style>
     <div class="content" style="min-height:400px" id="js-drop-zone">
 
-        <?php echo $file; ?> diagram
+        <?php echo $title; ?> diagram
 
     <div class="message error">
       <div class="note">
@@ -44,14 +46,14 @@ class ModlerView extends Views {
   </div>
   <ul class="buttons">
     <li>
-      <a id="js-download-diagram" href title="download BPMN diagram">
+      <div id="js-download-diagram" href title="download BPMN diagram">
         
-      </a>
+      </div>
     </li>
     <li>
-      <a id="js-download-svg" href title="download as SVG image">
+      <div id="js-download-svg" href title="download as SVG image">
         
-      </a>
+      </div>
     </li>
     <li>
     </li>
@@ -63,7 +65,7 @@ class ModlerView extends Views {
 <?php echo $xml; ?>
 </script>
 <script> 
-	var file='<?php echo $file; ?>';
+	var processId='<?php echo $processId; ?>';
 
 	
 	var OmniXML;
@@ -71,22 +73,6 @@ class ModlerView extends Views {
 	var OmniChangesCallback=diagramChanged;
         window.saveDiagramFunct=saveDiagram;
 
-        omniMenusLocal.setItemDisabled("local.saveModel");        
-//              
-//                      
-//        omniMenus.addButton("local.saveModel", 7, "Save Model", "open.gif", "open_dis.gif");
-//        omniMenus.disableItem("local.saveModel");
-        
-	omniMenusLocal.attachEvent('onClick', function(id,zoneId,cas)
-	{
-                
-	function diagramChanged()
-	{
-           
-           
-            omniMenusLocal.setItemEnabled("local.saveModel");
-	}
-    });
 
 </script>
 <?php

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 namespace OmniFlow\WFCase;
 
 use OmniFlow;
-use OmniFlow\ActionManager;
+
 
 /**
  * Description of WFCaseItem
@@ -29,6 +29,7 @@ use OmniFlow\ActionManager;
  */
 class WFCaseItemStatus extends \OmniFlow\WFObject
 {
+    static $Notes;
         var $id;
         var $caseId;
         var $itemId;
@@ -37,6 +38,7 @@ class WFCaseItemStatus extends \OmniFlow\WFObject
         var $actor;
         var $status;
         var $statusDate;
+        var $notes;
         
 
     public function __construct(\OmniFlow\WFCase\WFCaseItem $caseItem,$newStatus,$from) {
@@ -44,7 +46,8 @@ class WFCaseItemStatus extends \OmniFlow\WFObject
         $this->caseId=$caseItem->case->caseId;
         $this->itemId=$caseItem->id;
         $this->status = $newStatus;
-        $this->flowId=$from->processNodeId;
+        if ($from!==null)
+            $this->flowId=$from->id;
         $user=OmniFlow\Context::getUser();
         $this->userId=  $user->id;
         
@@ -53,6 +56,10 @@ class WFCaseItemStatus extends \OmniFlow\WFObject
     public function insert()
     {
         $model=new \OmniFlow\CaseItemStatusModel();
+        
+        $this->notes = self::$Notes;
+        self::$Notes='';
+        
         $model->insert($this);
     }
     public function update()

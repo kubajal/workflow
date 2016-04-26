@@ -1,8 +1,20 @@
-/* jQuery( document ).ajaxError(function( event, request, settings , thrownError ,response ) {
-  alert("Error requesting data " + settings.url + thrownError  +request +"Response:"+response);
-waiting("");
-}); 
-*/
+/*
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 
 jQuery( window ).resize(function() {
     
@@ -25,6 +37,8 @@ jQuery( window ).resize(function() {
 
 */
 //	--- Layout ---
+        var inDesignMode=false;
+        var inViewMode=false;
 	var main_layout;
 	var workAreaTabbar;
 	var itemTabbar;
@@ -33,13 +47,15 @@ jQuery( window ).resize(function() {
 	var ProcessItemForm;
 	var ActionForm;
         var MessageForm;
+        var SignalForm;
 	var ConditionForm;
 	var ItemDocForm;
 
 	var gridItems;
 	var gridItemData;
+        var gridScripts;
 
-        var gridSubProcesses;
+        var gridPools;
         var gridActors;
 
 	var currentItemId;
@@ -60,13 +76,19 @@ jQuery( window ).resize(function() {
 
 	function diagramChanged()
 	{
-            omniMenusLocal.setItemEnabled("local.saveModel");
+         try
+            {
+//            omniMenusLocal.setItemEnabled("local.saveModel");
+            }
+         catch(Ex)
+         {
+             
+         }
 	}
 	
 	
 	function saveDiagram()
 	{
-	waiting("Saving..");
 //            displayStatus("Saving Data.");
             var url=getAjaxUrl(); 
 
@@ -95,10 +117,16 @@ return;
 	xmlDocument = encodeURIComponent(bpmn);
 
 */			
+    if (typeof OmniXML == "undefined")
+    {
+        alert("No changes to save. BPMN Modeler requires you to make changes in order to save.");
+        return;
+    }
+	waiting("Saving..");
             var data = {
         			'action': 'omni_ajax_call',
                                 'command': 'modeler.saveDiagram',
-                                'file': file ,
+                                'processId': processId ,
                                 'bpmn':  OmniXML,
 				'svg': OmniSVG
                             };
@@ -113,10 +141,13 @@ return;
 							
             jQuery.post(url, data, function(response) {
             	waiting("");
+                window.onbeforeunload = null;
 //				alert(response);
-                }).error(function() {
+                }).error(function(event, request, settings , thrownError ,response) {
                             alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
                             waiting("");
+                            window.onbeforeunload = null;
+                            
                         });
 	}
 
@@ -130,6 +161,7 @@ return;
 				{type: "settings", position: "label-left", labelWidth: 100, inputWidth: 120},
 				{type: "block", inputWidth: "auto", offsetTop: 12, list: [
 					{type: "input", name:"modelName", label: "New Model Name", value: "new model"},
+					{type: "input", name:"modelTitle", label: "New Model Title", value: "new model"},
 					{type: "button", value: "Proceed", offsetLeft: 70, offsetTop: 14}
 				]}
 			];
@@ -142,9 +174,10 @@ return;
                     myForm.attachEvent("onButtonClick", function(name)
                         {
                         var value = myForm.getItemValue("modelName");
+                        var title = myForm.getItemValue("modelTitle");
 //                        alert(value);
                         dhxWins.unload();
-                        invokeAction('modeler.new','&file='+value+'.bpmn');
+                        invokeAction('modeler.new','&processName='+value+'&processTitle='+title);
                         });                    
 
         }
@@ -189,14 +222,16 @@ return;
                 if (item['_modified']==true)
 			mods.push(item);
             }
-            saveData["items"]=procJson['items'];
+            saveData["items"]=mods;//procJson['items'];
             saveData["dataElements"]=procJson['dataElements'];
             saveData["actors"]=procJson['actors'];
             saveData["accessRules"]=procJson['accessRules'];
             saveData["notificationRules"]=procJson['notificationRules'];
-            saveData["subprocesses"]=procJson['subprocesses'];
+            saveData["pools"]=procJson['pools'];
 
-            var jsonStr = JSON.stringify(saveData);
+            return saveData;
+            var jsonStr = JSON.stringify(objMap);
+            alert(jsonStr);
             
             return jsonStr;
             
@@ -213,21 +248,24 @@ return;
             jsonStr.replace(/\n/g,"~~n");
             alert(jsonStr); */
 
-            var file=getParameterByName('file');
+            var processId=getParameterByName('processId');
             var data = {
         			'action': 'omni_ajax_call',
                                 'command': 'process.saveJson',
-                                'file': file ,
+                                'processId': processId ,
                                 'json':  jsonStr
                             };
 
             jQuery.post(url, data, function(response) {
                                     waiting("");
                                     displayStatus("Data Saved.");
+                                    window.onbeforeunload = null;
                 
-                            }).error(function() {
+                            },'json')
+                            .error(function(event, request, settings , thrownError ,response) {
                             alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
                             waiting("");
+                            window.onbeforeunload = null;
                         });
 
 	}
@@ -238,12 +276,13 @@ return;
 		var el=jQuery('#targetBlock');
 	 	el.html("loading item details ...");
 		var url=getAjaxUrl();
+                window.onbeforeunload = null;
 
-	 	var file=getParameterByName('file');
+	 	var processId=getParameterByName('processId');
 	 	var data = {
 	 				'action': 'omni_ajax_call',
 	 				'command': 'process.getJson',
-	 				'file': file
+	 				'processId': processId
 	 			};
 //	 	alert(url+"data :"+data.action+" "+data.command+" "+data.file);
 
@@ -280,8 +319,8 @@ return;
 			procJson=response;
                         jsonData=procJson;
 			displayData(procJson);
-			}).error(function() {
-                            alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
+			}).error(function(event, request, settings , thrownError ,response) {
+                            alert("Error requesting data " + event.responseText);
                             waiting("");
                         });
 	}
@@ -290,6 +329,7 @@ return;
             displayItemDetails(item);
 
         }
+
 	function validate()
 	{
             displayStatus("validating...");
@@ -300,11 +340,11 @@ return;
                 
                 var jsonStr = buildJsonForSave();
 
-	 	var file=getParameterByName('file');
+	 	var processId=getParameterByName('processId');
 	 	var data = {
 	 				'action': 'omni_ajax_call',
 	 				'command': 'process.validate',
-                                        'file': file ,
+                                        'processId': processId ,
                                         'json':  jsonStr
 	 			};
 //	 	alert(url+"data :"+data.action+" "+data.command+" "+data.file);
@@ -326,7 +366,7 @@ return;
                 var w1 = dhxWins.createWindow("w1", 200, 200, 320, 450);
                 w1.setText("Validation Results");
                 w1.attachHTMLString('<div style="overflow-y: scroll;height:400px">'+response+'</div>');
-		}).error(function() {
+		}).error(function(event, request, settings , thrownError ,response) {
                             alert("Error requesting data " + settings.url + thrownError  +request+"response:" +response);
                             waiting("");
                         });	 
@@ -351,16 +391,38 @@ return;
 			dhtmlx.image_path=dxImgPath;
 
 	main_layout = new dhtmlXLayoutObject('MainLayout', '2E');
-        main_layout.setAutoSize("a", "a;b");
+  //      main_layout.setAutoSize("a", "a;b");
 	var diagram = main_layout.cells('a');
-	diagram.setText('Diagram');
-	diagram.setCollapsedText('Diagram');
+        var scr="<span style='float:right;'>Zoom:<a href='javascript:zoomDiag(1);'>+</a>";
+        scr+="  <a href='javascript:zoomDiag(0);'>=</a>";
+        scr+="  <a href='javascript:zoomDiag(-1);'>-</a></span>";
+	diagram.setText('Diagram'+' for Process '+modelTitle+scr);
+	diagram.setCollapsedText('Diagram'+' for Process '+modelTitle);
 	
 //	diagram.hideHeader();
 	diagram.attachObject("diagramContents");
-        
+//        main_layout.cells("a").dhxcont.mainCont.style.overflow="auto";         
 }
-	
+var zoomValue=1;
+var initialBox=null;
+function zoomDiag(amount)
+{
+    if (initialBox==null)
+    {
+        initialBox =jQuery("svg")[0].getAttribute('viewBox', viewBox);
+        initialBox= initialBox.split(" ");
+    }
+    if (amount==0)
+        zoomValue=1;
+    else
+        zoomValue+=(amount/10);
+    
+    var viewBox=initialBox[0]+' '+initialBox[1]+' '+Math.floor(initialBox[2]/zoomValue)+' '+Math.floor(initialBox[3]/zoomValue)+' ';
+  jQuery("svg")[0].setAttribute('viewBox', viewBox);
+  //jQuery("svg").css('transform', 'scale('+zoomValue+')')  
+  
+
+}
 
 function BuildWorkArea()
 {
@@ -389,39 +451,39 @@ function BuildWorkArea()
 	workAreaTabbar.addTab('ProcessDetails','Process Setting');
 	var ProcessDetails = workAreaTabbar.cells('ProcessDetails');
         
-       	gridSubProcesses = ProcessDetails.attachGrid();
-	gridSubProcesses.setIconsPath(dxImgPath);
+       	gridPools = ProcessDetails.attachGrid();
+	gridPools.setIconsPath(dxImgPath);
 	
-	gridSubProcesses.setHeader(["Sub-Process Name","Implementation"]);
-	gridSubProcesses.setColTypes("ro,co");
+	gridPools.setHeader(["Pool Name","Implementation"]);
+	gridPools.setColTypes("ro,co");
         
-        combo = gridSubProcesses.getCombo(1);
+        combo = gridPools.getCombo(1);
             combo.put("","Undefined");
             combo.put("all","Full Implementation");
             combo.put("no","No Implementation");
             combo.put("msgs","Receive Messages Only"); 
         
-	gridSubProcesses.setColumnIds("name,implementation");
+	gridPools.setColumnIds("name,implementation");
 	
-	gridSubProcesses.setInitWidths("270,150");
-	gridSubProcesses.setColAlign("left,left");
-	gridSubProcesses.init();
+	gridPools.setInitWidths("270,150");
+	gridPools.setColAlign("left,left");
+	gridPools.init();
 
 
-	gridSubProcesses.attachEvent("onEditCell", function(stage,rId,cInd,nValue,oValue){
+	gridPools.attachEvent("onEditCell", function(stage,rId,cInd,nValue,oValue){
 
-		var cId=gridSubProcesses.getColumnId(cInd);
+		var cId=gridPools.getColumnId(cInd);
 		
-		if (gridSubProcesses.getColType(cInd)=='ch')
+		if (gridPools.getColType(cInd)=='ch')
 			{
 			nValue=gridItemData.cells(rId,cInd).isChecked();
 			}
 		debug("onChange! "+stage+" row"+rId+" cell:"+cInd+":"+cId+ " value:" + nValue+" from "+oValue+" type:"+gridItemData.getColType(cInd));
 		
                 
-//        	var item = getObject('subprocesses',rId);		
+//        	var item = getObject('pools',rId);		
 //                item[cId]=nValue;
-                setJsonValue('subprocesses.['+rId+'].'+cId,nValue);
+                setJsonValue('pools.['+rId+'].'+cId,nValue);
                 
 		return true;
 	});
@@ -505,48 +567,88 @@ function displayItemData(force,fromTab)
 		var rowId=gridItemData.getSelectedRowId();
 		
 	}
+    
     displayItemDescription(currentItemId);
 		
 }
+function displayActiveScripts()
+{
+
+    var path='items.['+currentItemId+'].scripts';
+
+    displayObject([ScriptsForm],path,gridScripts.getSelectedRowId());
+
+    for(var i=0;i<gridScripts.getRowsNum();i++)
+    {    
+        gridScripts.cells2(i,0).setTextColor('gray');
+    }
+    var scripts=getObject(path,null);
+    if(scripts!==null) {
+        for(var i=0;i<scripts.length;i++)
+        {
+            var scr=scripts[i];
+            var id=scr['id'];
+            gridScripts.cells(id,0).setTextColor('black');
+
+        }
+    }
+
+}
 function displayItemDescription(itemId)
 {
-    var item = getObject('items',itemId);	
+    var html=getItemDescription(itemId);
     
-    var iType=item.type;
-    
-    item = getObject('descriptions',iType);	
-    if (item==null)
-    {
-        jQuery("#itemDescription").html("Not Defined");
-        return;
-    }
-    var dOptions="<ul>";
-    for(var i=0;i<item.designOptions.length;i++)
-    {
-        var opt=item.designOptions[i];
-        dOptions+="<li>"+opt+"</li>";
-    }
-    dOptions+="</ul>";
-    
-    var mOptions="<ul>";
-    for(var i=0;i<item.modelOptions.length;i++)
-    {
-        var opt=item.modelOptions[i];
-        mOptions+="<li>"+opt+"</li>";
-    }
-    mOptions+="</ul>";
-
-    var html="<table><tr><td>Title:</td><td>"+item.title+
-            "</tr><tr><td>Description:</td><td>"+item.desc+
-            "</tr><tr><td>start:</td><td>"+item.start+
-            "</tr><tr><td>Completion:</td><td>"+item.completion+
-            "</tr><tr><td>Design Options:</td><td>"+dOptions+
-            "</tr><tr><td>Model Options:</td><td>"+mOptions+
-            
-            "</tr></table>";
-            
     jQuery("#itemDescription").html(html);
+}
+function getItemDescription(itemId)
+{
+    
+    desc = getObject('itemsDescription',itemId);	
+    if (desc==null)
+    {
+        return '';
+    }
+    var html="<table style='font-size:.8em'>";
 
+    var pre='';
+    var post='</td></tr>';
+    html+= getDescAttribute(desc,'title',"<tr><td><b>","</b>"+post);
+    html+= getDescAttribute(desc,'desc',"<tr><td>",post);
+    html+= getDescAttribute(desc,'userDoc',"<tr><td>",post);
+    html+= getDescAttribute(desc,'start',"<tr><td>Start:",post);
+    html+= getDescAttribute(desc,'completion',"<tr><td>Completion:",post);
+//    html+= getDescAttribute(desc,'designOptions',"<tr><td style='width:20%;'>Design Options:</td><td>",post);
+//    html+= getDescAttribute(desc,'modelOptions',"<tr><td style='width:20%;'>Model Options:</td><td>",post);
+    
+    html+="</table>";
+
+    return html;
+
+}
+function getDescAttribute(desc,attr,pre,post)
+{
+    txt='';
+    txt=desc[attr];
+    if ((typeof txt === 'undefined')  || (txt===null))
+        return '';
+
+    if (jQuery.isArray(txt)) {
+        
+        if (txt.length>0) {
+            var dOptions="<ul>";
+            for(var i=0;i<txt.length;i++)
+                {
+                    var opt=txt[i];
+                    dOptions+="<li>"+opt+"</li>";
+                }
+            dOptions+="</ul>";
+            txt=dOptions;
+        }
+    } 
+    if (txt=='')
+        return '';
+    else
+        return pre+txt+post;
 }
 function updateItemData(rowId,field,value)
 {
@@ -629,42 +731,6 @@ function BuildProcessItems()
 
 	var ItemDetails = layout_2.cells('b');
 	ItemDetails.hideHeader();
-	/*
-	itemsMenu.addNewSibling(null, "run", "Simulate Process", false); 
-	itemsMenu.addNewSibling(null, "validate", "Validate", false); 
-	itemsMenu.addNewSibling(null, "debug", "View Model", false); 
-	itemsMenu.addNewSibling(null, "cancel", "Cancel", false); 
-	itemsMenu.addNewSibling(null, "save", "Save", false); 
-	
-	itemsMenu.attachEvent('onClick', function(id,zoneId,cas)
-	{
-		if (id=='validate')
-                {
-                    validate();
-                }
-		if (id=='run')
-		{
-	 	var url=window.location.href.split('?')[0];
-	 	var file=getParameterByName('file');
-                alert(url+" file "+file);
-                url=url+"?action=process.test&file="+file;
-                 window.location=url;
-		}
-		if (id=='save')
-		{
-		saveJson();
-		}
-		if (id=='debug')
-		{
-		debugWindow(procJson);
-		}
-		if (id=='cancel')
-		{
-                    cancelChanges();
-		}
-	});
-
-	*/
 	itemTabbar = ItemDetails.attachTabbar();
 	
 	var tab=addTab(itemTabbar,'itemDetails',"Item Details","itemDetails");
@@ -678,12 +744,18 @@ var str1 =
 		{"type":"newcolumn"},
 		{"type":"input","name":"form_input_name","label":"Name","labelWidth":105,"inputWidth":150},
 		{"type":"input","name":"form_input_id","label":"Id","labelWidth":105,"inputWidth":150},
-		{"type":"input","name":"form_input_subProcess","label":"Sub-Process","labelWidth":105,"inputWidth":150}
+		{"type":"input","name":"form_input_pool","label":"Pool","labelWidth":105,"inputWidth":150}
 		]},
 	{"type":"fieldset","name":"Navigation","label":"Navigation","inputWidth":"auto","list":[
 		{"type":"input","name":"form_input_inflowsLabels","label":"In-Flows","labelWidth":105,"inputWidth":150},
 		{"type":"newcolumn"},
 		{"type":"input","name":"form_input_outflowsLabels","label":"Out-Flows","labelWidth":105,"inputWidth":150}
+	]},
+	{"type":"fieldset","name":"Management","label":"Management","inputWidth":"auto","list":[
+		{"type":"input","name":"form_input_priority","label":"Priority","labelWidth":105,"inputWidth":150},
+		{"type":"newcolumn"},
+		{"type":"input","name":"form_input_deadline","label":"Deadline","labelWidth":105,"inputWidth":150},
+		{"type":"input","name":"form_input_effort","label":"Effort","labelWidth":105,"inputWidth":150}
 	]},
 	{"type":"fieldset","name":"Flow Navigation","label":"Flow Navigation","inputWidth":"auto","list":[
 		{"type":"input","name":"form_input_fromNodeLabel","label":"From","labelWidth":105,"inputWidth":150},
@@ -707,13 +779,27 @@ var str1 =
 		{"type":"input","name":"form_input_defaultFlow","label":"Default Flow","labelWidth":105,"inputWidth":150}
 	]}
 ] 
+// Message
 var strMsg=[{"type":"fieldset","name":"Message","label":"Message","inputWidth":"auto","list":[
 		{"type":"input","name":"form_input_message","label":"Message","labelWidth":105,"inputWidth":150},
-		{"type":"input","name":"form_input_messageRepeat","label":"Message is Repeated","labelWidth":105,"inputWidth":150},
+		{"type":"input","name":"form_input_messageKeyCaseExpressiont","label":"Message key: Case Expression","labelWidth":105,"inputWidth":150},
 		{"type":"newcolumn"},
-		{"type":"input","name":"form_input_messageFinalCondition","label":"Final Message Condition","labelWidth":105,"inputWidth":150}
+		{"type":"input","name":"form_input_messageKeyMsgExpression","label":"Message key: Message Expression","labelWidth":105,"inputWidth":150}
 	]}]
-var str2 = [{"type":"fieldset","name":"Action","label":"Action","inputWidth":"auto","list":[{"type":"select","name":"form_input_actionType","label":"Action Type","labelWidth":105,"inputWidth":150,"options":[{"text":"None","value":"None"},{"text":"Form","value":"Form"},{"text":"Script","value":"Script"},{"text":"Function","value":"Function"},{"text":"Email","value":"Email"},{"text":"Web Service","value":"Web Service"}]},{"type":"input","name":"form_input_actionScript","rows":5,"label":"Action Script","labelWidth":105,"inputWidth":425},{"type":"input","name":"form_input_actionParameters","label":"Action Parameters","labelWidth":105,"inputWidth":150}]}]
+// Signal
+var strSignal=[{"type":"fieldset","name":"Signal","label":"Signal","inputWidth":"auto","list":[
+		{"type":"input","name":"form_input_signalName","label":"Signal","labelWidth":105,"inputWidth":150}
+	]}]
+// Action
+var str2 = [{"type":"fieldset","name":"Action","label":"Action","inputWidth":"auto","list":[{"type":"select","name":"form_input_actionType","label":"Action Type","labelWidth":105,"inputWidth":150,"options":[{"text":"None","value":"None"},{"text":"Form","value":"Form"},{"text":"Script","value":"Script"},{"text":"Function","value":"Function"}]},
+            {"type":"input","name":"form_input_actionScript","rows":5,"label":"Action Script","labelWidth":105,"inputWidth":425}
+            ]}]
+// Scripts
+var strScripts = [{"type":"fieldset","name":"Scripts","label":"Scripts","inputWidth":"auto","list":
+            [
+            {"type":"input","name":"form_input_script","rows":8,"label":"Script","labelWidth":105,"inputWidth":425}
+        ]}]
+// Condition
 var str3 = [{"type":"fieldset","name":"Condition","label":"Condition","inputWidth":"auto","list":[
 	{"type":"input","name":"form_input_condition","rows":5,"label":"Condition","labelWidth":105,"inputWidth":425}]}] 
 	
@@ -722,7 +808,60 @@ var str3 = [{"type":"fieldset","name":"Condition","label":"Condition","inputWidt
 	
 	jQuery(ProcessItemForm).attr('id', 'ProcessItemForm');
 
-	itemTabbar.addTab('condition','Condition');
+        // scripts 
+        if (true) {
+	itemTabbar.addTab('scripts','Scripts');
+	 tab = itemTabbar.cells('scripts');
+	var layout = tab.attachLayout('2U');
+
+	var cell = layout.cells('a');
+        cell.setWidth("100");
+        cell.hideHeader();
+
+	gridScripts= cell.attachGrid();
+	gridScripts.setIconsPath(dxImgPath);
+	
+	gridScripts.setHeader(["Event","Script"]);
+	gridScripts.setColTypes("ro","ch");
+	gridScripts.setColumnIds("event","script");
+	
+	gridScripts.setInitWidths("270");
+	gridScripts.setColAlign("left");
+	gridScripts.init();
+	
+	gridScripts.attachEvent("onRowSelect",function(rowId,cellIndex){
+                
+                // display the gird
+                // getCurrentItem 
+           var path='items.['+currentItemId+'].scripts';
+           displayObject([ScriptsForm],path,rowId);
+		
+	});	
+	
+	cell = layout.cells('b');
+        cell.hideHeader();
+	
+        ScriptsForm = cell.attachForm(strScripts);
+         
+	ScriptsForm.attachEvent("onChange", function (fieldName){
+            var rowId=gridScripts.getSelectedRowId();		
+            var path='items.['+currentItemId+'].scripts.['+rowId+']';
+               
+		//itemFieldUpdated(ScriptsForm,status,path);         
+		var value = ScriptsForm.getItemValue(fieldName);
+		var field=getPropertyFromField(fieldName);
+                if (value=='') {
+                    deleteJsonObject(path);
+                } else {
+                    setJsonValue(path+'.'+field,value);
+                }
+                displayActiveScripts();
+                
+            });
+        }
+	/* --------------------- Property -------------*/
+    
+        itemTabbar.addTab('condition','Condition');
 	 tab = itemTabbar.cells('condition');
 	 ConditionForm = tab.attachForm(str3);
 	
@@ -733,6 +872,10 @@ var str3 = [{"type":"fieldset","name":"Condition","label":"Condition","inputWidt
 	itemTabbar.addTab('message','Message');
 	  tab = itemTabbar.cells('message');
 	  MessageForm = tab.attachForm(strMsg);
+
+	itemTabbar.addTab('signal','Signal');
+	  tab = itemTabbar.cells('signal');
+	  SignalForm = tab.attachForm(strSignal);
 
 
 	itemTabbar.addTab('itemData','Data Usage');
@@ -769,10 +912,13 @@ var str3 = [{"type":"fieldset","name":"Condition","label":"Condition","inputWidt
 
 	var str = [
 		{ type:"settings" , labelWidth:80, inputWidth:250, position:"absolute"  },
-		{ type:"editor" , name:"form_editor_1", label:"Editor", labelWidth:900, inputWidth:900, inputHeight:120, labelLeft:5, labelTop:5, inputLeft:5, inputTop:21  }
+		{ type:"editor" , name:"form_input_description", label:"Editor", labelWidth:900, inputWidth:900, inputHeight:120, labelLeft:5, labelTop:5, inputLeft:5, inputTop:21  }
 		];
 	  
 	ItemDocForm = tab.attachForm(str);	
+	ItemDocForm.attachEvent("onChange", function (status){
+		itemFieldUpdated(ProcessItemForm,status);
+	});
 
 	ProcessItemForm.attachEvent("onChange", function (status){
 		itemFieldUpdated(ProcessItemForm,status);
@@ -782,6 +928,9 @@ var str3 = [{"type":"fieldset","name":"Condition","label":"Condition","inputWidt
 	});
 	MessageForm.attachEvent("onChange", function (status){
 		itemFieldUpdated(MessageForm,status);
+	});
+	SignalForm.attachEvent("onChange", function (status){
+		itemFieldUpdated(SignalForm,status);
 	});
 	ConditionForm.attachEvent("onChange", function (status){
 		itemFieldUpdated(ConditionForm,status);
@@ -854,7 +1003,8 @@ function BuildDataModel(tabbar)
 					{"text":"Text","value":"Text"},
 					{"text":"Select","value":"Select"},
 					{"text":"Date","value":"Date"},
-					{"text":"Boolean","value":"Boolean"},
+					{"text":"Checkbox","value":"Checkbox"},
+					{"text":"Radio","value":"Radio"},
 					{"text":"Email","value":"Email"},
 					{"text":"File","value":"File"}]},
 		{ type:"input" , name:"form_input_validValues", label:"Valid Values", rows:3, labelWidth:100, labelAlign:"left"   },
@@ -919,6 +1069,8 @@ function BuildDataModel(tabbar)
 var arActorCombo1;
 var arActorCombo2;
 var nrActorCombo;
+var nrTasksCombo1;
+var nrTasksCombo2;
 
 function populateActorCombo()
 {
@@ -954,23 +1106,24 @@ function BuildAccessRules(tabbar)
 	gridAccessRules = cell_9.attachGrid();
 	gridAccessRules.setIconsPath(dxImgPath);
 	
-	gridAccessRules.setHeader(["User Goup","Work Scope Type","WorkScope Variable","Actor","Privilege","On","As Actor","Condition"]);
-	gridAccessRules.setColTypes("co,co,co,co,co,co,ed,txt");
-	gridAccessRules.setColumnIds("userGroup,workScopeType,workScopeVariable,actor,privilege,nodeId,asActor,condition");
+	gridAccessRules.setHeader(["User Goup","Actor","Privilege","On","As Actor","Can Change","Work Scope Type","WorkScope Variable"]);
+	gridAccessRules.setColTypes("co,co,co,co,ed,ch,co,co");
+	gridAccessRules.setColumnIds("userGroup,actor,privilege,nodeId,asActor,canChange,workScopeType,workScopeVariable");
 	
-	gridAccessRules.setInitWidths("100,80,80,40,40,150,80,300");
-	gridAccessRules.setColAlign("center,center,center,center,left,center");
+	gridAccessRules.setInitWidths("100,80,80,40,40,150,80,40");
+	gridAccessRules.setColAlign("center,center,center,center,left,center,center,center,center");
 
-        arActorCombo1= gridAccessRules.getCombo(3);
-        arActorCombo2= gridAccessRules.getCombo(6);
+        arUserGroupCombo= gridAccessRules.getCombo(0);
+        arActorCombo1= gridAccessRules.getCombo(1);
+        arActorCombo2= gridAccessRules.getCombo(4);
         
-        combo = gridAccessRules.getCombo(4);
+        combo = gridAccessRules.getCombo(2);
             combo.put("V","View");
             combo.put("S","Start");
             combo.put("P","Perform");
             combo.put("A","Assign"); 
         
-        combo = gridAccessRules.getCombo(5);
+        combo = gridAccessRules.getCombo(3);
             combo.put("__Process__","Process");
 
 	gridAccessRules.init();
@@ -981,7 +1134,7 @@ function BuildAccessRules(tabbar)
 		
 		if (gridAccessRules.getColType(cInd)=='ch')
 			{
-			nValue=gridItemData.cells(rId,cInd).isChecked();
+			nValue=gridAccessRules.cells(rId,cInd).isChecked();
 			}
                 if (cId=='asActor')
                 {
@@ -1084,6 +1237,19 @@ function BuildAccessRules(tabbar)
 }
 function BuildNotificationRules(tabbar)
 {
+    /*  var id;
+     *  var $userType;   // Group, Actor , assigN users
+ var $userId;             // user id
+ var $userGroup;        // user group name
+ var $actor;
+ 
+ var $nodeId;      // null for process 
+ 
+ var $eventType;     //  Start , Completion , Assigned , Unassigned work, Error  
+ var $delay;
+ 
+ var $cancelIf;      // Completed , Assigned
+     */
 	tabbar.addTab('notification','Notifications');
 	var dataModel = tabbar.cells('notification');
 	var layout_3 = dataModel.attachLayout('2U');
@@ -1093,18 +1259,36 @@ function BuildNotificationRules(tabbar)
 
 	gridNotificationRules = cell_9.attachGrid();
 	gridNotificationRules.setIconsPath(dxImgPath);
+        
+	gridNotificationRules.setHeader(["User Type","User Goup","Actor","When","On","Delay","Cancel on"
+        ,"template","repeat after","repeat count"]);
+	gridNotificationRules.setColTypes("co,co,co,co,co,ed,co,ed,ed,ed");
+	gridNotificationRules.setColumnIds("userType,userGroup,actor,eventType,nodeId,delay,cancelIf,template,repeatAfter,repeatCount");
 	
-	gridNotificationRules.setHeader(["User Goup","When","Condition"]);
-	gridNotificationRules.setColTypes("co,co,txt");
-	gridNotificationRules.setColumnIds("userGroup,nodeId,condition");
-	
-	gridNotificationRules.setInitWidths("100,150,300");
+	gridNotificationRules.setInitWidths("50,50,50,50,100,50,50,50,50,50");
 	gridNotificationRules.setColAlign("center,center,center");
 
-        nrActorCombo= gridNotificationRules.getCombo(0);
+        var nrUserType=gridNotificationRules.getCombo(0);
+            nrUserType.put("G","User Group");
+            nrUserType.put("A","Actor");
+            nrUserType.put("N","Assigned Users");
+        var nrEventType=gridNotificationRules.getCombo(3);
+            nrEventType.put("S","Start");
+            nrEventType.put("C","Completion");
+            nrEventType.put("A","Assigned");
+            nrEventType.put("U","Unassigned");
+            nrEventType.put("E","Error");
+        nrActorCombo= gridNotificationRules.getCombo(2);
         
-        nrTasksCombo = gridNotificationRules.getCombo(1);
-          nrTasksCombo.put("__Process__","Process");
+        nrTasksCombo1 = gridNotificationRules.getCombo(4);
+        nrTasksCombo2 = gridNotificationRules.getCombo(6);
+          nrTasksCombo1.put("__Process__","Process");
+//          nrTasksCombo2.put("__Process__","Process");
+            nrTasksCombo2.put("S","Start");
+            nrTasksCombo2.put("C","Completion");
+            nrTasksCombo2.put("A","Assigned");
+            nrTasksCombo2.put("U","Unassigned");
+            nrTasksCombo2.put("E","Error");
 
 	gridNotificationRules.init();
 	
@@ -1199,7 +1383,7 @@ function initFields()
 	ProcessItemForm.setReadonly('form_input_type',true);
 	ProcessItemForm.setReadonly('form_input_subType',true);
 
-	ProcessItemForm.setReadonly('form_input_subProcess',true);
+	ProcessItemForm.setReadonly('form_input_pool',true);
 	ProcessItemForm.setReadonly('form_input_inflowsLabels',true);
 	ProcessItemForm.setReadonly('form_input_outflowsLabels',true);
 	ProcessItemForm.setReadonly('form_input_fromNodeLabel',true);
@@ -1213,23 +1397,26 @@ function displayObject(forms,path,objectId)
 	forms.forEach(function(form) {
 		form.forEachItem(function(name){
 			var type=form.getItemType(name);
-			if ((type=='input')||(type=='select')||(type=='checkbox'))
+			if ((type=='input')||(type=='select')||(type=='checkbox')||(type=='editor'))
 				{
 				var fieldName=getPropertyFromField(name);
 				if (obj==null)
-					{
-					form.setItemValue(name,'');
-					}
-					else
-					{	if (fieldName in obj)
-						{
-						var val=obj[fieldName];
-						form.setItemValue(name,val);
-						}
-						else
-						obj[fieldName]=null;
-					}
-				}
+                                {
+                                form.setItemValue(name,'');
+                                }
+                                else
+                                {	
+                                    if (fieldName in obj)
+                                    {
+                                    var val=obj[fieldName];
+                                    form.setItemValue(name,val);
+                                    }
+                                    else
+                                    {
+                                        form.setItemValue(name,null);
+                                    }
+                                }
+			}
 		});
 	});
 }
@@ -1247,11 +1434,58 @@ function getPropertyFromField(fieldName)
 		}
 	return fieldName;
 }
+var descDialog=null;
+
+function displayDescription(itemId)
+{
+    if (itemId==null)
+    {
+        var html='click on any item in the diagram to view description.'
+        var title = 'Model Helper';	
+        
+    } else {
+        var html=getItemDescription(itemId);
+        var title=getJsonValue('itemsDescription.['+itemId+'].label');	
+
+//        var title = getObject('items',itemId).label;	
+    }
+    if (descDialog==null) {
+        
+        descDialog = jQuery('<div width="100%">'+html+'</div>')
+                .dialog({
+                        title: title,
+                        autoOpen: true,
+                        width: 300,
+                        height: 300,
+                        overflow: "auto" ,
+                        resizeStop: function (event,ui)
+                        {
+                       //     alert(ui.size);
+                        },
+                        close: function( event, ui ) {
+                            descDialog=null;
+                        }
+                });
+    }
+    else {
+        jQuery(descDialog).dialog('option','title',title);
+        descDialog.html(html);
+    }
+
+}
 function displayItemDetails(itemId)
 {
+    if (inViewMode) {
+	displayDescription(itemId);
+        return;
+    }
+
+    if (inDesignMode) {
 	currentItemId=itemId;
+        
+	workAreaTabbar.cells('ProcessItems').setActive();
 	
-	var forms=[ProcessItemForm,ActionForm,ConditionForm,ItemDocForm];
+	var forms=[ProcessItemForm,MessageForm,SignalForm,ActionForm,ConditionForm,ItemDocForm];
 
 	displayObject(forms,'items',itemId);
 	checkItemFields(itemId);
@@ -1262,13 +1496,17 @@ function displayItemDetails(itemId)
             gridItems.selectRowById(itemId);
             displayItemData(true);
         }
+        
+        displayActiveScripts();
 
+    }
 }
 function checkItemFields(itemId)
 {
 	var type=getItemValue('items',itemId,"type");
 	var subtype=getItemValue('items',itemId,"subType");
 	var hasMessage=getItemValue('items',itemId,"hasMessage");
+	var hasSignal=getItemValue('items',itemId,"hasSignal");
 	var hasTimer=getItemValue('items',itemId,"hasTimer");
 	var isFlow=false;
 	var isTask=false;
@@ -1296,10 +1534,16 @@ function checkItemFields(itemId)
 		ProcessItemForm.showItem("Navigation");
 		}
 	
-	if (isTask)
-		itemTabbar.cells('action').show();
-	else
+//	if (isTask)
+//		itemTabbar.cells('action').show();
+//	else
 		itemTabbar.cells('action').hide();
+
+
+	if (isTask)
+		ProcessItemForm.showItem("Management");
+	else
+		ProcessItemForm.hideItem("Management");
 
 		
 	if (type.indexOf("Gateway")==-1)
@@ -1312,6 +1556,11 @@ function checkItemFields(itemId)
 	else
 		itemTabbar.cells('message').hide();
 
+	if (hasSignal==true)
+		itemTabbar.cells('signal').show();
+	else
+		itemTabbar.cells('signal').hide();
+
 	if (hasTimer==true)
 		ProcessItemForm.showItem("Timer");
 	else
@@ -1321,13 +1570,23 @@ function checkItemFields(itemId)
 
 function displayData()
 {
+    if (inViewMode)
+            displayDescription(null);
+
+    if (inDesignMode==false)
+        return;
 	//  display gridItems
 
         // Process details
         populateActorCombo();
 
+        var combo=gridAccessRules.getCombo(0);
+        populateCombo(combo,procJson['userRoles'],'name','name');
+        combo=gridNotificationRules.getCombo(1);
+        populateCombo(combo,procJson['userRoles'],'name','name');
         
-        var combo=gridAccessRules.getCombo(5);
+        
+        combo=gridAccessRules.getCombo(3);
         var procItems=procJson["items"];
         
         for(var i=0;i<procItems.length;i++)
@@ -1345,9 +1604,12 @@ function displayData()
             if ((item['superType']=='Task') || (item['superType']=='Event') )
             {
                 var label=item['type']+':'+item['name'];
-            nrTasksCombo.put(item['id'],label);                
+            nrTasksCombo1.put(item['id'],label);                
+//            nrTasksCombo2.put(item['id'],label);                
             }
         } 
+        
+        populateGrid(gridScripts,procJson['scriptEvents']);
         
         populateGrid(gridActors,procJson['actors']);
         
@@ -1355,7 +1617,7 @@ function displayData()
 	
         populateGrid(gridNotificationRules,procJson['notificationRules']);
         
-        populateGrid(gridSubProcesses,procJson['subprocesses']);
+        populateGrid(gridPools,procJson['pools']);
 
     
 	var objs=procJson['items'];

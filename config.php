@@ -3,7 +3,7 @@ namespace OmniFlow;
 
 class Config {
 	
-
+    /* Configuration Variables to be setup at installation */
 	var $dbtype = 'mysql';
 	var $host = '127.0.0.1';
 	var $user = 'root';
@@ -11,6 +11,7 @@ class Config {
 	var $password = '';
 	var $scriptPath=__DIR__;
 	var $processPath;
+        var $sendEmail=true;
 	static $pageUrl;
 	static $configInstance;
 	

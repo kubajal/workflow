@@ -29,105 +29,6 @@ namespace OmniFlow
 class ExpressionDebugSymfonyView extends Views
 {
     
-public function displayOld()
-{
-
-	$_caseId='';
-	$_itemId='';
-	$_script="";
-        $_data=null;
-        $scripts=null;
-        
-        $url=Helper::getUrl(array('action'=>'designer.debugScripts'));
-        echo "
-        <div style='margin:20px;'>
-        <style>
-        .vars {float:left;width:40%;}
-        .line {clear:both; border: 1px dotted; }
-        .stmt {float:left; width:60%;max-width:400px;}
-        .result {float:left; width:40%;}
-        .scripts {float:left;}
-        .output {border: 1px solid #AE00FF;    background-color: aliceblue; }
-        .clear { clear: both; }
-        </style>
-                ";
-	if (isset($_POST['script']))
-	{
-		$_script=  stripslashes($_POST['script']);
-	}
-	if (isset($_POST['caseId']) && $_POST['caseId']!=='' )
-	{
-            
-            
-		$_caseId=$_POST['caseId'];
-                
-                $_case=  WFCase\WFCase::LoadCase($_caseId);
-                
-		$_process=$_case->proc;
-                
-                $scripts=$_process->getAllScripts();
-                
-		$_data=$_case->values;
-		
-	}
-	
-	
-	echo "
-        <div class='form'>
-        <form name='ajaxform' id='ajaxform' action='$url' method='post'>
-	<br/>
-	Case Id:
-	<input type='text' name='caseId' value='$_caseId'></input>
-	Process Name:
-	<input type='text' name='file' value='$file'></input>
-	<br/>
-	<TEXTAREA NAME='script' ROWS=20 COLS=150>$_script</TEXTAREA>
-	<input type='submit' /></form>";
-        
-        echo "<div id='results'>";
-        
-	if (isset($_POST['script']))
-	{
-            $ret=$this->executeScript($_script,$_case);
-            
-	}
-        
-        echo "</div>";
-
-        
-        echo "
-        <hr /><div class='clear' style='margin:20px;'></div>
-        <div class='vars'>";
-        
-        if ($_data!==null)
-        {
-            echo "Case Variables<table style='line-height:1;'>";
-            foreach($_data as $key=>$val)
-            {
-                echo "<tr><td>$key</td><td>$val</td></tr>";
-            }
-            echo "</table>";
-        }
-
-        echo "</div>";
-
-       //   ------------ scripts -------------------
-        echo '<div class="scripts">';
-        if ($scripts!==null)
-        {
-            echo 'Process Scripts <table style="line-height:1;">';
-            foreach($scripts as $script)
-            {
-                echo '<tr><td>'.$script['nodeId'].'</td><td>'.
-                        $script['type'].'</td><td>'.
-                        $script['script'].'</td></tr>';
-            }
-            echo '</table>';
-        }
-        echo '</div></div>';
-        
-        echo '<div class="clear"/>';
-}
 public function display()
 {
 
@@ -177,7 +78,7 @@ public function display()
 	Case Id:
 	<input type='text' name='caseId' value='$_caseId'></input>
 	Process Name:
-	<input type='text' name='file' value='$file'></input>
+	<input type='text' name='processId'></input>
 	<br/>
 	<TEXTAREA NAME='script' ROWS=10 COLS=150>$_script</TEXTAREA>
             
@@ -263,11 +164,17 @@ public function execute()
                 
                 $_case=  WFCase\WFCase::LoadCase($_caseId);
             echo 'case '.$_case->caseId;
+            
+            // find the last item
+            $items=$_case.items;
+            $item=$itemss[count($items)-1];
+            $notes=$_case.notifications;
+            $notification=$notes[count($notes)-1];
         }
-        else
+        elseif ($_POST['processId']!=='')
         {
-		$files=$_POST['file'];
-               	$proc=BPMN\Process::Load($file);
+		$processId=$_POST['processId'];
+               	$proc=BPMN\Process::LoadProcess($processId);
                 $_case= \OmniFlow\WFCase\WFCase::SampleCaseForProcess($proc);
             echo 'proces '.$proc->name;
         }
@@ -283,9 +190,16 @@ public function execute()
 
 
 }
-public function executeScript($_script,$_case)
+public function executeScript($_script,$_case,$caseItem=null,$notification=null)
 {
-        $ret=ScriptEngine::Evaluate($_script,$_case);
+    
+            // find the last item
+            $citems=$_case->items;
+            $caseItem=$citems[count($citems)-1];
+            $notes=$_case->notifications;
+            $notification=$notes[count($notes)-1];
+    
+        $ret=ScriptEngine::Evaluate($_script,$_case,$caseItem,$notification);
             
         if ($ret->result===true)
             echo '<br />Final result: True';
@@ -295,7 +209,7 @@ public function executeScript($_script,$_case)
             echo '<br />Final result: Unknown';
             
         echo "<div class='results'>";
-            
+        
         foreach($ret->debugLines as $msg)
         {
             $line=$msg->stmt;

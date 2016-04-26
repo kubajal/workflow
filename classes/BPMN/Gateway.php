@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,27 @@ class Gateway extends Node
 		return true;
 	
 	}
+        public function CheckAllInflowsComplete(WFCase\WFCase $case,$input,$from)
+	{
+                foreach ($this->inflows as $flow)
+                {
+//                         
+                    $srcNode=$flow->fromNode->id;
+                    if ($from->processNodeId == $srcNode)   // calling item, must have completed
+                        continue;
+                    $srcItem=$case->getItemByProcessId($srcNode); // never started OK
+                    if ($srcItem==null)
+                        continue;
+                    $status =$srcItem->status;
+
+                        if ($status != \OmniFlow\enum\StatusTypes::Completed && $Status != \OmniFlow\enum\StatusTypes::Terminated)
+                        {
+                                //this.proc.wait(this);
+                                return false;
+                        }
+                }
+		return true;
+        }
 	public function loadFromXML($node)
 	{
 		parent::loadFromXML($node);

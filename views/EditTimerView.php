@@ -13,7 +13,7 @@ namespace OmniFlow;
  *
  * @author ralph
  */
-class EditTimerView {
+class EditTimerView extends Views {
     public function display()
     {
 	
@@ -80,6 +80,8 @@ class EditTimerView {
 		$cronExpression="$m $h $d $mon $wk $yr";
 	
 		echo "<br /> evaluation: $cronExpression";
+                require_once __DIR__.'\..\lib\cron\CronExpression.php';
+
 		try
 		{
 			$cron = \Cron\CronExpression::factory($cronExpression);

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,32 +39,32 @@ use OmniFlow\WFCase;
 
  */	
 	/// <summary>
-	/// Start:    All in-flows need to be completed before execution
+        //  parallelGateway
+	/// Start: (if Converging)   All in-flows need to be completed before execution
 	/// End:      All out-flows will be executed
 	/// </summary>
 	class ANDGateway extends Gateway
 	{
 
-	
-                public function Start(WFCase\WFCaseItem $caseItem,$input,$from)
+        	protected function start(WFCase\WFCase $case,$input,$from)
 		{
-			foreach ($this->inflows as $flow)
-			{
-				if ($flow->Status != \OmniFlow\enum\StatusTypes::Completed)
-				{
-					//this.proc.wait(this);
-					return false;
-				}
-			}
+                    if ($this->direction==='Diverging')
+                        return true;
+                    else
+                    {
+                        if ($this->CheckAllInflowsComplete($case, $input, $from))
+                            return true;
+                        else
+                            return false;
+                    }
+		}
+	
+		protected function run(WFCase\WFCaseItem $caseItem,$input,$from)
+		{
 			return true;
 		}
 	
-		public function Run(WFCase\WFCaseItem $caseItem,$input,$from)
-		{
-			return true;
-		}
-	
-		public function Finish(WFCase\WFCaseItem $caseItem,$input,$from)
+		protected function finish(WFCase\WFCaseItem $caseItem,$input,$from)
 		{
 			foreach ($this->outflows as $flow)
 			{
@@ -72,4 +72,11 @@ use OmniFlow\WFCase;
 			}
 			return true;
 		}
-	}
+	public function describe(\OmniFlow\Describer $t)
+	{
+		$t->title="Parallel Gateway (AND)";
+		$t->desc="Controls the flow of the process.";
+		$t->start=  OmniFlow\KW::converge.' '.OmniFlow\KW::waitIncomingFlows;
+		$t->completion=  OmniFlow\KW::diverge.' all outgoing flows will be executed';
+	}                
+}

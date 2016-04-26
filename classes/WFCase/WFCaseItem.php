@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 namespace OmniFlow\WFCase;
 
 use OmniFlow;
-use OmniFlow\ActionManager;
+
 
 /**
  * Description of WFCaseItem
@@ -30,30 +30,39 @@ use OmniFlow\ActionManager;
 		
 
 class WFCaseItem extends OmniFlow\WFObject
-		{
-			var $id;
-			var $caseId;
-			var $processNodeId;
-			var $type;
-                        var $subType;
-			var $label;
-			var $actor;
-			var $status;
-			var $started;
-			var $completed;
-			var $result;
-			var $notes;
-			var $timerType;
-			var $timer;
-			var $timerRepeat;
-			var $timerDue;
-			var $message;
-			var $messageKeys;
-			var $signalName;
-                        var $caseStatus;
-                        var $caseStatusDate;
-			var $values=Array();
-			var $case;
+{
+        var $id;
+        var $caseId;
+        var $processNodeId;
+        var $type;
+        var $subType;
+        var $label;
+        var $actor;
+        var $status;
+        var $started;
+        var $completed;
+        var $result;
+        var $notes;
+        var $timerType;
+        var $timer;
+        var $timerRepeat;
+        var $timerDue;
+        var $message;
+        var $messageKey;
+        var $signalName;
+        var $caseStatus;
+        var $caseStatusDate;
+
+        var $priority;
+        var $deadline;
+        var $effort;
+
+        var $values=Array();
+        var $case;
+        
+        static $subProcessId=null;
+        static $parentId=null;
+        
 			
 
 	public function __construct(WFCase $case)
@@ -92,15 +101,6 @@ class WFCaseItem extends OmniFlow\WFObject
 		else 
 			return true;
 	}
-	public function getActionView($postForm)
-	{
-		return ActionManager::getActionView($this,$postForm);
-	}
-	public function UserTake()
-        {
-            Assignment::UserTake($this);
-            
-        }
 	public function UserRelease()
         {
             Assignment::UserRelease($this);
@@ -113,7 +113,7 @@ class WFCaseItem extends OmniFlow\WFObject
         }
 	public function Update($status)
 	{
-		OmniFlow\Context::Log(INFO,"CaseItem:Update $this->id status: $this->status to: $status");
+		OmniFlow\Context::Log(\OmniFlow\Context::INFO,"CaseItem:Update $this->id status: $this->status to: $status");
 		$this->case->proc->Notify(OmniFlow\enum\NotificationTypes::CaseItemSaving,$this);
 		$this->status=$status;
 //		$this->result=$this->getProcessItem()->result;

@@ -30,6 +30,7 @@ public  function getList($status=null)
 }
 public  function insert(WFCase\WFCase $case)
 {
+        $case->created=date("Y-m-d H:i:s");
         $data=$case->__toArray();
         
         $id=$this->db->insertRow($this->getTable(),$data);
@@ -39,6 +40,7 @@ public  function insert(WFCase\WFCase $case)
 	
 public  function update(WFCase\WFCase $case)
 	{
+        $case->updated=date("Y-m-d H:i:s");
 	$data=$case->__toArray();
 
 	$this->db->updateRow($this->getTable(),$data,"caseId=$case->caseId");
@@ -61,6 +63,8 @@ public  function update(WFCase\WFCase $case)
 	}
 	CaseItemModel::getInstance()->loadCase($case);
 	AssignmentModel::getInstance()->loadCase($case);
+	NotificationModel::getInstance()->loadCase($case);
+        
 	return $case;	
     }
     public function getTableDDL()
@@ -72,9 +76,9 @@ public  function update(WFCase\WFCase $case)
 				`caseId` int(11) NOT NULL AUTO_INCREMENT,
 				`title` varchar(45) DEFAULT NULL,
 				`description` varchar(45) DEFAULT NULL,
-				`processName` varchar(45) DEFAULT NULL,
-				`isProcess` tinyint(1) DEFAULT 0,
-				`processFullName` varchar(450) DEFAULT NULL,
+				`processName` varchar(45) NOT NULL,
+				`processId` int(11) NOT NULL ,
+				`processVersion` varchar(45) NOT NULL,
 				`caseStatus` varchar(45) DEFAULT NULL,
 				`casestatusDate` datetime DEFAULT NULL,
 				`caseValues` varchar(4500) DEFAULT NULL,

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,11 +37,12 @@ class Node extends ProcessItem
 	public function Init()
 	{
 		parent::Init();
-                // subprocess
+                // pool
                 
 		$flows=array();
 		foreach($this->inflows as $flow)
 		{
+                    if (get_class($flow)=='OmniFlow\BPMN\Flow')
 			$flows[]=$flow->fromNode->type.':'.$flow->fromNode->name;
 		}
 		$this->inflowsLabels=join(",",$flows);
@@ -49,7 +50,14 @@ class Node extends ProcessItem
 		
 		foreach($this->outflows as $flow)
 		{
-			$flows[]=$flow->toNode->type.':'.$flow->toNode->name;
+                    if (get_class($flow)=='OmniFlow\BPMN\Flow')
+                    {    
+                        $type=$flow->toNode->type;
+                        $name=$flow->toNode->name;
+			$flows[]=$type.':'.$name;
+                    }
+                    else
+                        OmniFlow\Context::debug("flow is not a flow".get_class($flow));
 		}
 		$this->outflowsLabels=join(",",$flows);
 		
@@ -59,15 +67,32 @@ class Node extends ProcessItem
          *      a. No outgoing Message flows
          *      b. Message flow to an external (not executable node)
          */
-        public function IssueMessage()
+        
+        public function IssueMessage(WFCase\WFCaseItem $caseItem)
         {
 
             $messageName=$this->message;
-            $data=array();
-
-            OmniFlow\Context::Debug("Node $this->label Issue Message $messageName");
+            $data=  OmniFlow\Context::getInstance()->outputData;
             
-            ProcessSvc::HandleMessage($messageName, $data);
+
+            WFCase\WFCaseItemStatus::$Notes='send message:'.$messageName;
+
+            OmniFlow\Context::Debug("Node $this->label IssueMessage $messageName".print_r($data,true));
+            
+            \OmniFlow\MessageEngine::Send($messageName, $data);
+
+        }
+        public function IssueSignal(WFCase\WFCaseItem $caseItem)
+        {
+
+            $messageName=$this->signalName;
+            $data=  OmniFlow\Context::getInstance()->outputData;
+            
+            WFCase\WFCaseItemStatus::$Notes='issue signal:'.$messageName;
+
+            OmniFlow\Context::Debug("Node $this->label Issue Signal $messageName".print_r($data,true));
+            
+            \OmniFlow\MessageEngine::SendSignal($messageName, $data);
 
         }
         /*
@@ -78,42 +103,35 @@ class Node extends ProcessItem
         {
             if ($this->hasTimer)
             {
-                    $dueDate=EventEngine::getDueDate($this);
+                    $dueDate=  OmniFlow\EventEngine::getDueDate($this);
                     $caseItem->timerDue=$dueDate;
-                    OmniFlow\Context::Log(INFO,"Event Start: setting timer due date: $dueDate");
+                    OmniFlow\Context::Log(\OmniFlow\Context::INFO,"Event Start: setting timer due date: $dueDate");
 
             }
 
         }
-        public function getSubProcess()
+        public function getPool()
         {
-            foreach($this->proc->subprocesses as $sub)
+            foreach($this->proc->pools as $sub)
             {
-                if ($sub->id==$this->subProcess)
+                if ($sub->id==$this->pool)
                     return $sub;
             }
             return null;
         }
 
-	function Start(WFCase\WFCaseItem $caseItem,$input,$from)
-	{
-		$this->Notify(OmniFlow\enum\NotificationTypes::NodeStarted);
-		OmniFlow\Context::Log(LOG,"start Node: type: $this->type - $this->label - $this->id");
-
-		return true;
-	}
-	function Run(WFCase\WFCaseItem $caseItem,$input,$from)
+	protected function run(WFCase\WFCaseItem $caseItem,$input,$from)
 	{
  		OmniFlow\Context::Log(LOG,"Run Node: type: $this->type - $this->label - $this->id");
 
 		if ($this->actionScript!="")
                 {
                     $ret=eval ($this->actionScript);
-                    OmniFlow\Context::Log(INFO, "executing script: $this->actionScript ret: $ret" );
+                    OmniFlow\Context::Log(\OmniFlow\Context::INFO, "executing script: $this->actionScript ret: $ret" );
                 }
 		return true;
 	}
-	function Finish(WFCase\WFCaseItem $caseItem,$input,$from)
+	protected function finish(WFCase\WFCaseItem $caseItem,$input,$from)
 	{
  		OmniFlow\Context::Log(LOG,"Finish Node: type: $this->type - $this->label - $this->id");
 
@@ -121,7 +139,6 @@ class Node extends ProcessItem
 		{
 			$flow->Execute($caseItem->case,$input,$caseItem);
 		}
-		$this->Notify(OmniFlow\enum\NotificationTypes::NodeCompleted);
 		return true;
 	}
 	function Trace()
@@ -132,4 +149,16 @@ class Node extends ProcessItem
 			$flow->Trace();
 		}
 	}
+        function canSendMessages()
+        {
+                foreach($this->outflows as $flow)
+                {
+                    if ($flow->type=='messageFlow')
+                    {
+                        if ($flow->toNode->getPool()->isExecutable())
+                            return true;
+                    }
+                }
+                return false;
+        }
 }

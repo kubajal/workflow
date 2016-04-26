@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ namespace OmniFlow\BPMN;
 
 use OmniFlow;
 use OmniFlow\WFCase;
-use OmniFlow\ActionManager;
+
 /**
  * Description of Gateway
  *
@@ -39,18 +39,19 @@ use OmniFlow\ActionManager;
 
  */	
 	/// <summary>
+        //  ExclusiveGateway
 	/// Start:    If any in-flows is executed
 	/// End:      Only one out-flows will be executed based on input
 	/// </summary>
 	class XORGateway extends Gateway
         {
 
-		public function Run(WFCase\WFCaseItem $caseItem,$input,$from)
+		protected function run(WFCase\WFCaseItem $caseItem,$input,$from)
 		{
 			return true;
 		}
 		
-		public function Finish(WFCase\WFCaseItem $caseItem,$input,$from)
+		protected function finish(WFCase\WFCaseItem $caseItem,$input,$from)
 		{
 			$out=null;
 			$case=$caseItem->case;
@@ -66,11 +67,11 @@ use OmniFlow\ActionManager;
 				{
 					if ($flow->condition!='')
 					{
-						$ret=ActionManager::ExecuteCondition($case,	$flow->condition);
-					OmniFlow\Context::Log(INFO,'Ret of condition: '.$ret);
+						$ret=\OmniFlow\ActionManager::ExecuteCondition($case,	$flow->condition);
+					OmniFlow\Context::Log(\OmniFlow\Context::INFO,'Ret of condition: '.$ret);
 					 if ($ret==true)
 					 {
-						OmniFlow\Context::Log(INFO,'condtion passed: '.$ret);
+						OmniFlow\Context::Log(\OmniFlow\Context::INFO,'condtion passed: '.$ret);
 					 	$out=$flow;
 					 }
 					}
@@ -78,14 +79,14 @@ use OmniFlow\ActionManager;
 			}
 			if ($out==null)
 			{
-				OmniFlow\Context::Log(INFO,'no flow met conditions trying default flow');
+				OmniFlow\Context::Log(\OmniFlow\Context::INFO,'no flow met conditions trying default flow');
 				if ($this->getDefaultFlow()!=null)
 					$out=$this->getDefaultFlow();
 			}
 			
 			if ($out==null)
 			{
-				OmniFlow\Context::Log(ERROR,"No path specified");
+				OmniFlow\Context::Log(\OmniFlow\Context::ERROR,"No path specified");
                                 $caseItem->Error("No path specified");
 				return false;
 			}
@@ -96,5 +97,13 @@ use OmniFlow\ActionManager;
 			}
 				
 		}
+	public function describe(\OmniFlow\Describer $t)
+	{
+		$t->title="Exclusive Gateway (XOR)";
+		$t->desc="Controls the flow of the process.";
+		$t->start=  OmniFlow\KW::converge.' '.' it waits for ONE incoming flow';
+                $t->completion=  OmniFlow\KW::diverge.' Only ONE outinging flow will be executed';
+                
+	}                
 		
 	}

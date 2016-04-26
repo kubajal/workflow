@@ -1,10 +1,22 @@
 <?php
 
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 namespace OmniFlow;
 
@@ -15,12 +27,17 @@ namespace OmniFlow;
  */
 class SVGHandler
  {
-    static function displayDiagram(Process $proc,$decorations)
+    static function displayDiagram(\OmniFlow\BPMN\Process $proc,$decorations)
     {
             $debug=true;
 
-            $config=new Config();
-            $path = $config->processPath.'/'.str_replace('.bpmn', '.svg', $proc->processName);
+            $path = $proc->getImageFileName();
+            
+            if (!file_exists($path))
+            {
+                Context::Error("No SVG file found for this process. You need to save the model to generate an SVG file.");
+                return null;
+            }
 
             $entries = file_get_contents($path);
             $generator="";
@@ -131,18 +148,30 @@ class SVGHandler
 
             if ($generator=='bpmn.js')
             {
-                    foreach($proc->items as $procItem)
+                foreach($proc->items as $procItem)
+                {
+                    $id=$procItem->id;
+
+                    $g = $svg->xpath("//__nons:g[@data-element-id='$id']");
+
+                    if (count($g)==1)
                     {
-                            $id=$procItem->id;
+                        $g=$g[0];
+                        $g->addAttribute("onclick","top.processItemClicked(evt,'$id')");
+                        $g->addAttribute("onmouseover","top.processItemOver(evt,'$id')");
+                        $g->addAttribute("onmouseout","top.processItemOut(evt,'$id')");
+                        
+                        $rect=$g->rect;
+                        $attr=$rect->attributes();
+                        $ht=intval($attr['height']);
+                        if ($ht<20)
+                            $rect->attributes()->height=20;
+                        $wd=intval($attr['width']);
+                        if ($wd<20)
+                            $rect->attributes()->width=20;
 
-                            $g = $svg->xpath("//__nons:g[@data-element-id='$id']");
-
-                            if (count($g)==1)
-                            {
-                                    $g=$g[0];
-                                    $g->addAttribute("onclick","top.processItemClicked(evt,'$id')");
-                            }
                     }
+                }
             }
             /*
             $images = $svg->xpath('//__nons:circle');
@@ -200,58 +229,58 @@ class SVGHandler
                             //		echo '<br />image name:'.$image[0]; */
 
 
-                            foreach($decorations as $decore)
-                            {
-                                    //			echo ' decore:'.$decore[0];
+            foreach($decorations as $decore)
+            {
+                    //			echo ' decore:'.$decore[0];
     //					if ($decore[0]==$image[0])
-                                    $item=$decore[0];
+                    $item=$decore[0];
 
-                                    $id =$item->id;
+                    $id =$item->id;
 
-                                    $g = $svg->xpath("//__nons:g[@data-element-id='$id']");
+                    $g = $svg->xpath("//__nons:g[@data-element-id='$id']");
 
-                                    if (count($g)==1)
-                                    {
-                                            $g=$g[0];
+                    if (count($g)==1)
+                    {
+                            $g=$g[0];
 
-                                            $x=$item->xCoord;
-                                            $y=$item->yCoord;
+                            $x=$item->xCoord;
+                            $y=$item->yCoord;
 
-                                            $color = $decore[2];
-                                            //				echo '<br />adding decoration for'.$image[0];
+                            $color = $decore[2];
+                            //				echo '<br />adding decoration for'.$image[0];
 
-                                            /*$rec= $g->addChild('circle');
-                                            /*
-                                             <rect id="Ralph" stroke="red" width="120" height="60" x="341" y="94" rx="10" ry="10"
-                                            style="stroke-width: 4; fill: none;"/> */
+                            /*$rec= $g->addChild('circle');
+                            /*
+                             <rect id="Ralph" stroke="red" width="120" height="60" x="341" y="94" rx="10" ry="10"
+                            style="stroke-width: 4; fill: none;"/> */
 
-                                            /*$rec->addAttribute('stroke', 'red');
-                                            $rec->addAttribute('r', "10");
-                                            $rec->addAttribute('cx',0);
-                                            $rec->addAttribute('cy',0);
-                                            $rec->addAttribute('style', 'stroke-width: 2;fill: none;'); */ 
+                            /*$rec->addAttribute('stroke', 'red');
+                            $rec->addAttribute('r', "10");
+                            $rec->addAttribute('cx',0);
+                            $rec->addAttribute('cy',0);
+                            $rec->addAttribute('style', 'stroke-width: 2;fill: none;'); */ 
 
-                                            $txt =$g->addChild('text');
-                                                    $txt->addAttribute('class', ' djs-label');
-                                                    $txt->addAttribute('stroke', $color);
-                                            $ts = $txt->addChild('tspan',$decore[1]);
-                                                    $ts->addAttribute('x',4);
-                                                    $ts->addAttribute('y',-3);
+                            $txt =$g->addChild('text');
+                                    $txt->addAttribute('class', ' djs-label');
+                                    $txt->addAttribute('stroke', $color);
+                            $ts = $txt->addChild('tspan',$decore[1]);
+                                    $ts->addAttribute('x',4);
+                                    $ts->addAttribute('y',-3);
 
 
-                                            /*
-                                            <text class=" djs-label" style="font-family: Arial, sans-serif; font-size: 11px;">
-                                            <tspan x="4.5" y="12">Hungry for pizza
-                                            </tspan>
-                                            </text> */
+                            /*
+                            <text class=" djs-label" style="font-family: Arial, sans-serif; font-size: 11px;">
+                            <tspan x="4.5" y="12">Hungry for pizza
+                            </tspan>
+                            </text> */
 
-                                    }
-                            }
-            echo "<div style='overflow-y: scroll;height:400px'>";
+                    }
+            }
+//            echo "<div style='overflow-y: scroll;height:400px'>";
 
             echo $svg->asXML();
 
-           echo '</div>';
+//           echo '</div>';
     }
  	
  }

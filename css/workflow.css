@@ -1,4 +1,71 @@
 @CHARSET "ISO-8859-1";
+
+#omni_page {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  min-height: 700px; 
+}
+
+#omni_header {
+  flex: 0 1 auto;
+}
+
+#omni_content {
+  border: 1px dotted grey;
+  flex: 1 1 auto;
+}
+
+#omni_footer {
+  flex: 0 1 10px;
+}                
+.mainLayout {
+  flex: 1 1 auto;
+}
+
+
+/* navbar */
+.navbar-nav > li  {border-right: 1px solid lightblue; }
+
+.navbar-brand { border:0 !important;}
+
+.navbar-nav > li > a {
+    font-size: 12px;
+    padding-left:5px !important; 
+    padding-right:5px !important; 
+    padding-top:10px !important; 
+    padding-bottom:10px !important;}
+
+.navbar {min-height: 42px !important;}
+
+/* forms */
+.form-section {
+   border: 1px dotted green;
+   }
+
+.form-group {
+    border: none;
+   /* border: 1px dotted lightgray; */
+   }
+.form-checkbox { max-width: 40px;}
+
+.form-horizontal .help-block { margin-left: 20px; }
+
+.control-label { font-weight: bold; }
+
+.clearfix:after {
+    content: ".";
+    display: block;
+    clear: both;
+    visibility: hidden;
+    line-height: 0;
+    height: 0;
+}
+
+/* end of forms */
+
+
+td.linenos { width: 20px;}
 .field
 {
 	width: 25%;
@@ -71,10 +138,13 @@ background-color: rgb(238, 220, 239);
     position: fixed;
     top: 0px;
     left: 0px;
-    padding: 40px;
+    padding: 40px 10px 10px 10px;
     width:100%;
     display:block;
     overflow-y: scroll;
     height: 100%;
+    background-color: whilte;
+    background-color: white;
+    background-image: none;
 }
 .hide { display: none;}

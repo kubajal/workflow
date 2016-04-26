@@ -18,18 +18,23 @@ class XMLLoader
 {
     var $proc;
     var $xml;
-    function LoadFile($fileName,$loadExtensions=true)
+    function LoadFile($proc,$loadExtensions=true)
     {
+            $fileName=$proc->getFileName();
+        
+            $path = $fileName;
 
-            $config=new Config();
-            $path = $config->processPath.'/'.$fileName;
-
+            if (!file_exists($path))
+            {
+                Context::Error("File $path does not exist");
+                return null;
+            }
             $entries = file_get_contents($path);
             $this->xml = new \SimpleXmlElement($entries);
 
             $this->xml->registerXPathNamespace('model', 'http://www.omg.org/spec/BPMN/20100524/MODEL');
 
-            $this->proc = new BPMN\Process($fileName);
+            $this->proc = $proc;
 
             $this->loadMessages();
 
@@ -40,6 +45,7 @@ class XMLLoader
             $this->loadNodes("sendTask","OmniFlow\BPMN\Task");
             $this->loadNodes("scriptTask","OmniFlow\BPMN\Task");
             $this->loadNodes("manualTask","OmniFlow\BPMN\Task");
+            $this->loadNodes("subProcess","OmniFlow\BPMN\Task");
 
 
             $this->loadNodes("startEvent","OmniFlow\BPMN\Event");
@@ -51,13 +57,29 @@ class XMLLoader
 
             $this->loadNodes("exclusiveGateway","OmniFlow\BPMN\XORGateway");
             $this->loadNodes("inclusiveGateway","OmniFlow\BPMN\ORGateway");
-            $this->loadNodes("parallelGateway","OmniFlow\BPMN\AndGateway");
-            $this->loadNodes("eventBasedGateway","OmniFlow\BPMN\ORGateway");
+            $this->loadNodes("parallelGateway","OmniFlow\BPMN\ANDGateway");
+            $this->loadNodes("eventBasedGateway","OmniFlow\BPMN\EventBasedGateway");
+            
+            $this->loadLanes();
+            
+            $this->loadNodes("participant","OmniFlow\BPMN\Participant",false);
+            
+            
             $this->loadNodes("messageFlow","OmniFlow\BPMN\Flow",false);
             $this->loadNodes("sequenceFlow","OmniFlow\BPMN\Flow",false);
 
+/*
+ *  we need to get particpants as well
+ *   <bpmn2:collaboration id="Collaboration_0vpkhfc">
+    <bpmn2:participant id="Participant_0ufgbno" processRef="Process_1" />
+    <bpmn2:participant id="Participant_1659ivr" processRef="Process_0a0hex8" />
+    <bpmn2:messageFlow id="MessageFlow_1h2wx9h" sourceRef="SendTask_1eshlev" targetRef="Participant_1659ivr" />
+    <bpmn2:messageFlow id="MessageFlow_0voa3cz" sourceRef="EndEvent_10mwvz6" targetRef="IntermediateCatchEvent_0whqx4b" />
+  </bpmn2:collaboration>
 
-            $this->loadLanes();
+ */            
+            
+
             foreach($this->proc->items as $node)
             {
                     $node->actor=$node->lane;
@@ -108,9 +130,9 @@ class XMLLoader
                             $procNode->registerXPathNamespace('model', 'http://www.omg.org/spec/BPMN/20100524/MODEL');
 
                             $attr=$procNode->Attributes();
-                            $subProcId = $attr['id'];
+                            $poolId = $attr['id'];
 
-                            $participant = $this->xml->xpath($dblDash."model:participant[@processRef='$subProcId']");
+                            $participant = $this->xml->xpath($dblDash."model:participant[@processRef='$poolId']");
 
                             $actor="";
                             if (count($participant)>0)
@@ -126,7 +148,7 @@ class XMLLoader
                             foreach($procNode->xpath('model:'.$name) as $child) {
                                     //				echo '<br />'.$child->getName();
                                     $obj = new $class($this->proc);
-                                    $obj->subProcess=$subProcId->__toString();;
+                                    $obj->pool=$poolId->__toString();;
                                     $obj->loadFromXML($child);
                                     $obj->actor=$actor;
                             }
@@ -159,20 +181,28 @@ class XMLLoader
     </model:lane>
              */
 
+            $seq=0;
             foreach($this->xml->xpath('//model:process') as $procNode) {
-
+                    $seq++;
                     $procNode->registerXPathNamespace('model', 'http://www.omg.org/spec/BPMN/20100524/MODEL');
 
-                    $subProcId = self::getAttribute($procNode, 'id');
-                    $subProcName = self::getAttribute($procNode,'name');
-                    if ($subProcName=='')
-                        $subProcName=$subProcId;
-                    Context::Log(INFO, "model:process tag $subProcId - $subProcName");
+                    $poolId = self::getAttribute($procNode, 'id');
                     
-                    $subProc=new BPMN\SubProcess();
-                    $subProc->id=$subProcId;
-                    $subProc->name=$subProcName;
-                    $this->proc->subprocesses[$subProcName]=$subProc;
+                    if ($poolId ===null || $poolId==='')
+                        $poolId ='process_'.$seq;
+                            
+                    $poolName = self::getAttribute($procNode,'name');
+                    if ($poolName=='')
+                        $poolName=$poolId;
+                    Context::Log(INFO, "model:process tag $poolId - $poolName");
+                    
+                    $pool=new BPMN\Pool($this->proc);
+                    $pool->type='pool';
+                    $pool->id=$poolId;
+                    $pool->loadFromXML($procNode);
+                    $pool->name=$poolName;
+
+                    $this->proc->pools[$poolName]=$pool;
                     
             }
         
@@ -180,7 +210,9 @@ class XMLLoader
             foreach($this->xml->xpath('//model:lane') as $laneNode) {
 
                     $attr=$lane=$laneNode->attributes();
-                    $lane=$attr['name']->__ToString();
+                    
+                    if (isset($attr['name']))
+                        $lane=$attr['name']->__ToString();
 
 
                     foreach(XMLLoader::children($laneNode) as $child) {

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ class ItemVariable extends \OmniFlow\WFObject
         
         public function canView()
         {
-            if ($this->view==='1')
+            if ($this->view==='1' || $this->view==='true')
                 return true;
             else 
                 
@@ -42,7 +42,7 @@ class ItemVariable extends \OmniFlow\WFObject
         }
         public function canEdit()
         {
-            if ($this->edit==='1')
+            if ($this->edit==='1' || $this->edit==='true')
                 return true;
             else 
                 

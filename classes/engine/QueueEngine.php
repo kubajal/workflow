@@ -1,10 +1,21 @@
 <?php
-
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 namespace OmniFlow;
 
@@ -22,6 +33,19 @@ class QueueEngine {
                 array("type"=>'Node',
                 "method"=>$method,
                 "objects"=>$objects);
+
+          self::$queueItems[]=$qItem;
+        
+//        self::executeQueueItem($qItem);
+        
+    }
+    public static function addMessage($message,array $data)
+    {
+        Context::Debug("Queue::addMessage $message");
+        $qItem=
+                array("type"=>'Message',
+                "method"=>$message,
+                "objects"=>$data);
 
           self::$queueItems[]=$qItem;
         
@@ -75,29 +99,36 @@ class QueueEngine {
     }
     public static function executeQueueItem($nextItem)
     {
-        
-        if ($nextItem["type"]=='Node')
+      
+        switch($nextItem['type'])
         {
-//        Context::Log(INFO, "processItem ".print_r($nextItem,true));
-            $method=$nextItem["method"];
-            $objects=$nextItem["objects"];
+            case 'Message':
+                $msg=$nextItem["method"];
+                $data=$nextItem["objects"];
+                MessageEngine::Process($msg,$data);
+                break;
+            case 'Node':
+                Context::Log(INFO, "Queue::executeQueueItem");
+                $method=$nextItem["method"];
+                $objects=$nextItem["objects"];
 
-            $obj=null;
-            $params=array();
-//            print_r($nextItem);
-            
-            
-            foreach($objects as $o)
-            {
-                if ($obj==null)
-                    $obj=$o;
-                else
-                    $params[]=$o;
-            }
-            
-            call_user_func_array (  array( $obj,$method) , $params );
+                $obj=null;
+                $params=array();
+    //            print_r($nextItem);
 
-//           $ret=$processItem->$method($case,"",$from);
+
+                foreach($objects as $o)
+                {
+                    if ($obj==null)
+                        $obj=$o;
+                    else
+                        $params[]=$o;
+                }
+
+                call_user_func_array (  array( $obj,$method) , $params );
+
+    //           $ret=$processItem->$method($case,"",$from);
+                break;
         }
     }
     public static function hasEnoughResources()

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2015 ralph
+ * Copyright (c) 2015, Omni-Workflow - Omnibuilder.com by OmniSphere Information Systems. All rights reserved. For licensing, see LICENSE.md or http://workflow.omnibuilder.com/license
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 namespace OmniFlow;
 
 include_once 'ScriptHelpers.php';
+include_once "sandbox.php";
 /**
  * Description of ScriptEngine
  *
@@ -39,12 +40,23 @@ class ScriptEngine
 	var $language;
         var $vars;
         var $output="";
+        var $outputMode=false;
+        var $outputVar='';
         var $result;
         var $returning=false;
         var $scriptBlocks; //tree 
         var $debugLines=Array();
         var $messages=Array();
-        
+
+   function out($text)
+   {
+       if ($this->outputVar==='')
+        $this->output.=$text;
+       else {
+           $this->vars[$this->outputVar].=$text;
+       }
+
+   }
    function addDebugLine($line,$stmt,$ret,$err=null)
    {
        $out=new ScriptDebugLine();
@@ -55,17 +67,21 @@ class ScriptEngine
        $this->debugLines[]=$out;
    }
 
-public static function Evaluate($script,$case)
+public static function Evaluate($script,$case,$caseItem=null,$notification=null,$toUser=null)
 {
+        Context::Debug("ScriptEngine.Evaluate $script");
     
 	$lang=new ScriptEngine();
-	$lang->Init($case);
-        return $lang->Execute($script);
+	$lang->init($case,$caseItem,$notification,$toUser);
+        return $lang->execute($script);
 }
-function Execute($script)
+private function execute($script)
 {
+        Context::Debug("ScriptEngine.Execute $script");
+            
+        
         $vars=$this->vars;
-        $this->script=$this->stripComments($script);
+        $this->script=$script;//$this->stripComments($script);
         
         $rootNode=$this->Parse($this->script);
         
@@ -198,29 +214,36 @@ function executeNode($node,$takesControl=false,$type='')
                     return $ret;                
                 break;
             }
-           
-           
+        case 'mode_text':
+            $this->out($node->value);
+            break;
+        case 'template':
+            $this->outputMode=true;
         case 'block':
             foreach($node->children as $child)
             {
                 $r=$this->executeNode($child);
                 if ($this->continue)
                 {
-                    if ($takesControl)
-                        $this->continue=false;
                     break;  // no more children but parent will continue next record
                 }
                 if ($this->break)
                 {
-                    if ($takesControl)
-                        $this->break=false;
                     break;
                 }
                 if ($r!==null) // null means didn't execute
                     $ret=$r;
-                if ($this->returning)
+                if ($this->returning) {
                     return $ret;
+                }
             }
+            if ($type=='template')  // finish template 
+                $this->outputMode=false;
+            
+            if ($this->outputMode)
+                $this->out($ret);
+            
+            
             return $ret;
             break;
         case 'statement':
@@ -247,16 +270,19 @@ function executeNode($node,$takesControl=false,$type='')
                 $ret=$this->executeExpression($str);
                 if (strlen($left) > 0)
                 {
-                    $this->vars[$left]=$ret;
+                    $this->setVariableFromScript($left, $ret);
                 }
 
                 $isTrue=$this->isTrue($ret);
-                return $isTrue;                
+                return $ret;// $isTrue;                
             }
             break;
     }
 }
-
+public function setVariableFromScript($varname,$value) 
+{
+        $this->vars[$varname]=$value;
+}
 // -------------------------------------------------------
 public static function Validate($proc)
 {
@@ -281,7 +307,18 @@ public static function Validate($proc)
             try
             {
             
-            $lang=$lang->Execute($script);
+            $lang=$lang->execute($script);
+            
+            foreach($lang->messages as $out)
+                {
+                    {
+                        $msg="Script for ".$scr['nodeId']."-".$scr['type']." has an error <br/>Script:'".$scr['script']."'".$out;
+                        Context::Log(VALIDATION_ERROR, $msg);
+
+                    }
+                }
+            $lang->messages=Array();
+            
             }
             catch (\Exception $ex) {
                 $msg="Script for ".$scr['nodeId']."-".$scr['type']." has an error <br/>Script:'".$script."'".$ex->getMessage();
@@ -289,47 +326,16 @@ public static function Validate($proc)
             }
         }
 
-        foreach($lang->messages as $out)
-            {
-                {
-                    $msg="Script for ".$scr['nodeId']."-".$scr['type']." has an error <br/>Script:'".$scr['script']."'".$out;
-                    Context::Log(VALIDATION_ERROR, $msg);
-                    
-                }
-            }
         
 }
         
-function Init($case)
+private function init($case,$caseItem=null,$notification=null,$toUser=null)
 {
         
 	$this->language = new \Symfony\Component\ExpressionLanguage\ExpressionLanguage();
 
-	$this->language->register('upper',
-                function ($arg) {
-        		return sprintf('strtoupper(%s)', $arg);
-                        	}, 
-                function (array $variables, $value) {
-                            return strtoupper($value);
-                            });
-        {
-	$compiler = function ($arg) {
-		return sprintf('strtoupper(%s)', $arg);
-		};
-	$evaluator = function (array $variables, $value) {
-		return ExpressionFunctionHelper::getVar($this,$value);
-		};
-	$this->language->register('get', $compiler, $evaluator);
-        }
-        {
-        /*
-         * function: set(variableName,value);
-         */
-	$compiler = function ($arg) {	return sprintf('strtoupper(%s)', $arg);		};
-	$evaluator = function (array $variables, $name,$value) {return ExpressionFunctionHelper::setVar($this,$name,$value);		};
-	$this->language->register('set', $compiler, $evaluator);
-        }
-
+        ExpressionFunctionHelper::$scriptEngine=$this;
+        
         {
         /*
          * function: log(expression);
@@ -348,6 +354,18 @@ function Init($case)
         }
         {
         /*
+         * function: setOutput(expression);
+         */
+	$compiler = function ($arg) {	return sprintf('strtoupper(%s)', $arg);		};
+	$evaluator = function (array $variables, $expression) {
+          
+            return ExpressionFunctionHelper::setOutput($this,$expression);
+            
+        };
+	$this->language->register('setOutput', $compiler, $evaluator);
+        }
+        {
+        /*
          * function: return(expression);
          * 
          */
@@ -358,17 +376,26 @@ function Init($case)
 
         
         if ($case!==null)
-            $sbCase=new CaseSandbox($case);
-        $sbUser=new UserSandbox();
+            $sbCase=new \OmniFlow\Sandbox\WFCase($case);
+        $sbUser=new \OmniFlow\Sandbox\User();
 	$this->vars=$case->values;
-        $this->vars['String']=new StringSandbox();
-        $this->vars['Date']=new DateSandbox();
-        $this->vars['Web']=new WebSandbox();
+        $this->vars['String']=new \OmniFlow\Sandbox\String($this);
+        $this->vars['Date']=new \OmniFlow\Sandbox\Date($this);
+        $this->vars['Web']=new \OmniFlow\Sandbox\Web($this);
+        $this->vars['Email']= new EmailEngine();
         $this->vars['_case']=$sbCase;
         $this->vars['_user']=$sbUser;
-        $this->vars['_context']= new ContextSandbox();
-        $this->vars['Web']= new WebSandbox();
+        $this->vars['_context']= new \OmniFlow\Sandbox\Context($this);
         
+        if ($caseItem!==null) {
+            $this->vars['_caseItem']=$caseItem->__toArray();
+        }
+        if ($notification!==null) {
+            $this->vars['notification']=$notification;
+        }
+        if ($toUser!==null) {
+            $this->vars['toUser']=$toUser;
+        }
         
 }
 /*

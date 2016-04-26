@@ -51,7 +51,17 @@ class ProcessExtensions
                     }
  		}
             // now save Item dataElements
-            
+            $item->scripts=Array();
+            if (isset($jitem['scripts']))
+            {
+                $itemScr=$jitem['scripts'];
+                foreach($itemScr as $scr)
+                {
+                    $sid=$scr['id'];
+                    $s=$scr['script'];
+                    $item->scripts[$sid]=$s;
+                }
+            }
             if (isset($jitem['dataElements']))
             {
                 $itemDes=$jitem['dataElements'];
@@ -89,10 +99,10 @@ class ProcessExtensions
         }
         Context::Log(INFO, "Saving Data Elements ended");
         
-        if (isset($json['subprocesses']))
+        if (isset($json['pools']))
         {
             
-            $subs=$json['subprocesses'];
+            $subs=$json['pools'];
             
             foreach($subs as $sub)
             {
@@ -100,11 +110,11 @@ class ProcessExtensions
                $id=$sub['id'];
                
                $impl=$sub['implementation'];
-               foreach($proc->subprocesses as $subProc)
+               foreach($proc->pools as $pool)
                {
-                   if ($subProc->id == $id)
+                   if ($pool->id == $id)
                    {
-                       $subProc->implementation=$impl;
+                       $pool->implementation=$impl;
                    }
                }
             } 
@@ -153,7 +163,7 @@ class ProcessExtensions
             
             foreach($ars as $ar)
             {
-               $rule= new NotificationRule();
+               $rule= new \OmniFlow\BPMN\NotificationRule();
                $rule->__fromArray($ar);
                $proc->notificationRules[]=$rule;
             } 
@@ -165,10 +175,7 @@ class ProcessExtensions
     
     static function saveExtensions(BPMN\Process $proc)
     {
-	$config=new Config();
-	$fileName=str_replace('.bpmn', '.xml',$proc->processName);
- 		
-	$path = $config->processPath.'/'.$fileName;
+	$path = $proc->getExtensionFileName();
  		 		
 	$txt=
 '<?xml version="1.0"?>
@@ -178,7 +185,7 @@ class ProcessExtensions
 <actors></actors>
 <accessRules></accessRules>
 <notificationRules></notificationRules>
-<subprocesses></subprocesses>
+<pools></pools>
 </processExtensions>'; 					
         file_put_contents($path, $txt);
 
@@ -215,6 +222,14 @@ class ProcessExtensions
                         }
                     }
  		}
+                foreach($item->scripts as $sid=>$scr)
+                {
+                    $script=$node->addChild("script");
+                    $script->addAttribute('id',$sid);
+                    dom_import_simplexml($script)->nodeValue = $scr;
+
+                    
+                }
                 
                 foreach($item->dataElements as $variable)
                 {
@@ -272,14 +287,14 @@ class ProcessExtensions
         }
         
         
- 	$DENodes=$xml->xpath("//subprocesses");
+ 	$DENodes=$xml->xpath("//pools");
                 
  	if (count($DENodes)==1)
             $DENodes=$DENodes[0];
         
-        foreach($proc->subprocesses as $de)
+        foreach($proc->pools as $de)
         {
-            $node=$DENodes->addChild("subprocess");
+            $node=$DENodes->addChild("pool");
             $de->__toXML($node);
         }
         
@@ -287,64 +302,14 @@ class ProcessExtensions
         
 //        $str=str_replace("~~n~~", "&#xD;", $str);
         $str=str_replace("~~n~~", "&#xA;", $str);
+        $str=str_replace("\\n", "&#xA;", $str);
+        $str=str_replace("\\'", "'", $str);
+        $str=str_replace("\\&quot;", "&quot;", $str);
+        
         file_put_contents($path, $str);
 //	$xml->saveXML($path);
         
     }        
-/* 	function saveExtensions(Process $proc,ProcessItem $item,$values)
- 	{
-		$config=new Config();
- 		$fileName=str_replace('.bpmn', '.xml',$proc->processName);
- 		
-		$path = $config->processPath.'/'.$fileName;
- 		 		
- 		if (!file_exists($path))
- 		{
- 			$txt=
-'<?xml version="1.0"?>
-<processExtensions>
-<items>
-</items>
-</processExtensions>'; 					
- 			file_put_contents($path, $txt);
- 		}
- 		$entries = file_get_contents($path);
- 		$xml = new \SimpleXmlElement($entries);
-
- 		
- 		$id =$item->id;
- 		
- 		// ------------- items -----------------
- 		$ItemsNodes=$xml->xpath("//items");
- 		if (count($ItemsNodes)==1)
- 			$ItemsNodes=$ItemsNodes[0];
-
- 		$nodes=$xml->xpath("//items/item[@id='$id']");
-
- 		if (count($nodes)==1)
- 		{
- 			$node=$nodes[0];
- 		}
- 		else
- 		{ 
- 			$node=$ItemsNodes->addChild("item");
- 			$node->addAttribute('id',$id);
- 		}
- 			
- 		
- 		$properties=MetaProperty::getActivityProperties();
- 			
- 		$newXML="";
- 		foreach($values as $name=>$val)
- 		{
- 			$prop=$properties[$name];
- 			$newXML.=$prop->toXML($node,$val,$item);	
- 		}
- 		
- 		$xml->saveXML($path);
-		
- 			
- 	} */
  	static function setNode($parent,$nodeName,$value="",$attributes=array())
  	{
  		$nodes=$parent->xpath($nodeName);
@@ -361,7 +326,7 @@ class ProcessExtensions
  		}
  	}
  	
- 	function loadExtensions($fileName,Process $proc)
+ 	function loadExtensions($fileName,  BPMN\Process $proc)
  	{
  		if (!file_exists($fileName))
  			return;
@@ -412,17 +377,17 @@ class ProcessExtensions
  			$this->parseItemExtension($item,$proc,$properties);
  		}
                 
-                // subprocesses
+                // pools
                 
- 		foreach($xml->xpath('//subprocesses/subprocess') as $item) {
+ 		foreach($xml->xpath('//pools/pool') as $item) {
                         $id=  XMLLoader::getAttribute($item,'id');
                         $impl=  XMLLoader::getAttribute($item,'implementation');
                         
-                        foreach($proc->subprocesses as $subProc)
+                        foreach($proc->pools as $pool)
                         {
-                            if ($subProc->id == $id)
+                            if ($pool->id == $id)
                             {
-                                $subProc->implementation=$impl;
+                                $pool->implementation=$impl;
                             }
                         }                        
  		}
@@ -459,7 +424,7 @@ class ProcessExtensions
  	 * parses the xml for node extensions
  	 *
  	 */
- 	function parseItemExtension($item,Process $proc,$properties)
+ 	function parseItemExtension($item, \OmniFlow\BPMN\Process $proc,$properties)
  	{
  		$id=XMLLoader::getAttribute($item, 'id');
  		$type=XMLLoader::getAttribute($item, 'type');
@@ -477,7 +442,7 @@ class ProcessExtensions
  		
  		if ($processItem==null)
  		{
- 			Context::Log("Item specified in xml file not found $id-$name");
+ 			Context::Log(INFO,"Item specified in xml extensions file not found $id-$name");
  			return;
  		}
  	
@@ -485,7 +450,15 @@ class ProcessExtensions
  		foreach($item->children() as $child)
  		{
  			$nodeName=$child->getName();
- 			if (isset($properties[$nodeName]) ) 
+                        if ($nodeName=='script') 
+                        {
+                            $s=$child->__toString();
+                            $sid=XMLLoader::getAttribute($child, 'id');
+
+                            
+                            $processItem->scripts[$sid]=$s;
+                        }
+ 			elseif (isset($properties[$nodeName]) ) 
  			{
                             $prop=$properties[$nodeName];
  				

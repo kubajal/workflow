@@ -82,7 +82,7 @@ class ValidationRule
         
 	public function evaluate($process,$processItem,$showItemLink=true)
 	{
-            Context::Log(INFO, "validation rule $this->title");
+            Context::Log(\OmniFlow\Context::INFO, "validation rule $this->title");
 		$condition=$this->condition;
 		if (!$condition($process,$processItem,$this))
 		{
