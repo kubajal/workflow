@@ -505,7 +505,7 @@ class Process extends OmniFlow\WFObject
         }
 	public static function NewProcess($processName,$processTitle)
 	{
-            $proc=new Process();
+            $proc=new Process(1);
             $proc->processName=$processName;
             $proc->title=$processTitle;
             $model=new \OmniFlow\ProcessModel();

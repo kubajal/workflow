@@ -1,13 +1,17 @@
 <?php
 
+/**
+ * @package omniworkflow
+ */
+
 /*------------------------------------------------------------------------------
 Plugin Name: Omni-Workflow
 Description: A WordPress Workflow Engine that is BPMN 2.0 compliant
-Author: Ralph Hanna
-Version: 1.12
+Author: Ralph Hanna, Kuba Jalowiec
+Version: 1.13
 License:     GPL2
-Author URI: http://workflow.omnibuilder.com
-Plugin URI: http://workflow.omnibuilder.com
+Author URI: https://github.com/kubajal/workflow
+Plugin URI: https://github.com/kubajal/workflow
 
 Omni-Workflow is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
